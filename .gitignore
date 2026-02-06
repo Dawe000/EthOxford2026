@@ -46,6 +46,7 @@ cf.json
 wrangler-account.json
 
 /claude.md*
+/context-docs/
 
 # Hardhat
 contracts/cache/
