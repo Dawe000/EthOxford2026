@@ -85,12 +85,25 @@ interface SDKConfig {
   rpcUrl?: string;
   marketMakerUrl?: string;
   ipfs?: {
-    provider: "pinata" | "nft.storage";
-    apiKey: string;
+    provider: "pinata" | "nft.storage" | "mock";
+    apiKey?: string;  // not required for mock
     uriScheme?: "ipfs" | "https";
   };
 }
 ```
+
+## IPFS Mock (Local Testing)
+
+Use `provider: "mock"` to avoid IPFS entirely—returns deterministic URIs (`ipfs://mock{hash}`) with no network calls:
+
+```typescript
+ipfs: {
+  provider: "mock",
+  uriScheme: "ipfs",
+}
+```
+
+Same content yields the same URI. No `apiKey` required.
 
 ## Integration Testing
 

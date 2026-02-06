@@ -3,8 +3,9 @@
  */
 
 export interface IpfsConfig {
-  provider: "pinata" | "nft.storage";
-  apiKey: string;
+  provider: "pinata" | "nft.storage" | "mock";
+  /** Not required for mock provider */
+  apiKey?: string;
   /** Return ipfs:// or https:// gateway URL (default: ipfs://) */
   uriScheme?: "ipfs" | "https";
 }

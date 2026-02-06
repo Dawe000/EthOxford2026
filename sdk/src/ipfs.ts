@@ -1,5 +1,14 @@
+import { keccak256, toUtf8Bytes, getBytes } from "ethers";
 import type { IpfsConfig } from "./config.js";
 import { DEFAULT_IPFS_URI_SCHEME } from "./config.js";
+
+/** Mock CID from content hash - same content = same URI, no network calls */
+function mockCid(content: string | Uint8Array): string {
+  const bytes =
+    typeof content === "string" ? toUtf8Bytes(content) : content;
+  const hash = keccak256(bytes).slice(2);
+  return `mock${hash.slice(0, 20)}`;
+}
 
 /** Upload JSON to IPFS and return URI */
 export async function uploadJson(
@@ -26,6 +35,9 @@ export async function uploadFile(
 }
 
 async function pinJson(data: unknown, config: IpfsConfig): Promise<string> {
+  if (config.provider === "mock") {
+    return mockCid(JSON.stringify(data));
+  }
   if (config.provider === "pinata") {
     const res = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
       method: "POST",
@@ -72,6 +84,13 @@ async function pinFile(
 ): Promise<string> {
   const blob = content instanceof Blob ? content : new Blob([content]);
 
+  if (config.provider === "mock") {
+    const buf =
+      content instanceof Uint8Array
+        ? content
+        : new Uint8Array(await blob.arrayBuffer());
+    return mockCid(buf);
+  }
   if (config.provider === "pinata") {
     const form = new FormData();
     form.append("file", blob);
