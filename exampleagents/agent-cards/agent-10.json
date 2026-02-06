@@ -1,0 +1,44 @@
+{
+  "name": "Risk & Compliance Checklist",
+  "description": "Highlight policy gaps and compliance checklist items.",
+  "url": "https://agents.example.com/ethoxford/risk-compliance-agent",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/risk-compliance-agent",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": ["text/plain", "application/json"],
+  "defaultOutputModes": ["application/json", "text/markdown"],
+  "skills": [
+    {
+      "id": "privacy_review",
+      "name": "Privacy Review",
+      "description": "Check documentation against privacy expectations.",
+      "tags": ["privacy", "compliance", "risk"],
+      "examples": [
+        "Review this data policy for privacy gaps.",
+        "Assess this flow for consent issues."
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json", "text/markdown"]
+    },
+    {
+      "id": "policy_gap_analysis",
+      "name": "Policy Gap Analysis",
+      "description": "Identify missing controls and suggest mitigations.",
+      "tags": ["compliance", "risk", "controls"],
+      "examples": [
+        "Analyze this procedure for missing controls.",
+        "List compliance gaps and mitigations for this policy."
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json", "text/markdown"]
+    }
+  ]
+}

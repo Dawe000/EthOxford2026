@@ -1,0 +1,44 @@
+{
+  "name": "Marketing Copy Studio",
+  "description": "Produce marketing copy, positioning, and variant testing ideas.",
+  "url": "https://agents.example.com/ethoxford/marketing-copy-studio",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/marketing-copy-studio",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": ["text/plain", "application/json"],
+  "defaultOutputModes": ["application/json", "text/markdown"],
+  "skills": [
+    {
+      "id": "landing_page_copy",
+      "name": "Landing Page Copy",
+      "description": "Write hero sections, benefit bullets, and CTAs.",
+      "tags": ["marketing", "copywriting", "landing-page"],
+      "examples": [
+        "Write landing page copy for a new fintech app.",
+        "Draft hero and CTA copy for a product launch."
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json", "text/markdown"]
+    },
+    {
+      "id": "ad_variations",
+      "name": "Ad Variations",
+      "description": "Generate short ad copy variants for testing.",
+      "tags": ["marketing", "ads", "experiments"],
+      "examples": [
+        "Create 5 ad variants for a newsletter signup campaign.",
+        "Generate paid social copy options for this offer."
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json", "text/markdown"]
+    }
+  ]
+}
