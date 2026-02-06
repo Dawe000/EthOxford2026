@@ -50,7 +50,7 @@ describe("AgentTaskEscrow - Path A (Happy Path)", function () {
   });
 
   it("market maker receives fee on settlement", async function () {
-    const { escrow, mockToken, client, agent, marketMaker } = await deployFixtureWithFee(100);
+    const { escrow, mockToken, client, agent, marketMaker } = await deployFixtureWithFee(10);
 
     const paymentAmount = ethers.parseEther("100");
     const stakeAmount = ethers.parseEther("10");
@@ -78,8 +78,8 @@ describe("AgentTaskEscrow - Path A (Happy Path)", function () {
     const mmBalanceAfter = await mockToken.balanceOf(await marketMaker.getAddress());
 
     const feeReceived = mmBalanceAfter - mmBalanceBefore;
-    const expectedFee = (paymentAmount * 100n) / 10000n;
-    logBalance("marketMaker", feeReceived, `MM fee received (1% of ${paymentAmount})`);
+    const expectedFee = (paymentAmount * 10n) / 10000n;
+    logBalance("marketMaker", feeReceived, `MM fee received (0.1% of ${paymentAmount})`);
     expect(feeReceived).to.equal(expectedFee);
   });
 });
