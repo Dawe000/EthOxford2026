@@ -3,6 +3,7 @@ import { ethers } from "hardhat";
 import { deployFixture } from "./helpers/fixtures";
 import { advanceCooldown, advanceAgentResponseWindow } from "./helpers/time";
 import { calculateResultHash, signTaskResult } from "./helpers/crypto";
+import { logStep } from "./helpers/logger";
 
 describe("AgentTaskEscrow - Path B (Dispute, Agent Concedes)", function () {
   it("client disputes, agent does nothing, client wins after response window", async function () {
@@ -32,16 +33,21 @@ describe("AgentTaskEscrow - Path B (Dispute, Agent Concedes)", function () {
     await escrow.connect(agent).assertCompletion(0, resultHash, signature);
 
     const disputeBond = (paymentAmount * 100n) / 10000n;
+    logStep("disputeTask", { taskId: 0, disputeBond: disputeBond.toString() });
     await mockToken.connect(client).approve(await escrow.getAddress(), disputeBond);
     await escrow.connect(client).disputeTask(0, "ipfs://client-evidence");
 
+    logStep("advanceCooldown + advanceAgentResponseWindow");
     await advanceCooldown();
     await advanceAgentResponseWindow();
 
     const clientBalanceBefore = await mockToken.balanceOf(await client.getAddress());
+    logStep("settleAgentConceded", { taskId: 0 });
     await escrow.connect(client).settleAgentConceded(0);
     const clientBalanceAfter = await mockToken.balanceOf(await client.getAddress());
 
-    expect(clientBalanceAfter - clientBalanceBefore).to.equal(paymentAmount + disputeBond + stakeAmount);
+    const delta = clientBalanceAfter - clientBalanceBefore;
+    logStep("client payout", { delta: delta.toString(), expected: "payment + disputeBond + stake" });
+    expect(delta).to.equal(paymentAmount + disputeBond + stakeAmount);
   });
 });

@@ -3,6 +3,7 @@ import { ethers } from "hardhat";
 import { deployFixture } from "./helpers/fixtures";
 import { advanceUmaLiveness } from "./helpers/time";
 import { calculateResultHash, signTaskResult } from "./helpers/crypto";
+import { logStep } from "./helpers/logger";
 
 describe("AgentTaskEscrow - Path B (Dispute, UMA Resolution)", function () {
   it("client disputes, agent escalates, mock OOv3 resolves agent wins", async function () {
@@ -38,16 +39,21 @@ describe("AgentTaskEscrow - Path B (Dispute, UMA Resolution)", function () {
     const escalationBond = (paymentAmount * 100n) / 10000n;
     const bond = escalationBond > 1000000n ? escalationBond : 1000000n;
     await mockToken.connect(agent).approve(await escrow.getAddress(), bond);
+    logStep("escalateToUMA", { taskId: 0 });
     await escrow.connect(agent).escalateToUMA(0, "ipfs://agent-evidence");
 
     const task = await escrow.getTask(0);
     const assertionId = task.umaAssertionId;
+    logStep("escalated", { assertionId });
 
+    logStep("advanceUmaLiveness");
     await advanceUmaLiveness();
 
+    logStep("pushResolution", { assertionId, assertedTruthfully: true });
     await mockOOv3.pushResolution(assertionId, true);
 
     const taskAfter = await escrow.getTask(0);
+    logStep("callback settled", { status: taskAfter.status });
     expect(taskAfter.status).to.equal(8); // Resolved enum value
   });
 
@@ -84,16 +90,17 @@ describe("AgentTaskEscrow - Path B (Dispute, UMA Resolution)", function () {
     const escalationBond = (paymentAmount * 100n) / 10000n;
     const bond = escalationBond > 1000000n ? escalationBond : 1000000n;
     await mockToken.connect(agent).approve(await escrow.getAddress(), bond);
+    logStep("escalateToUMA", { taskId: 0 });
     await escrow.connect(agent).escalateToUMA(0, "ipfs://agent-evidence");
 
     const task = await escrow.getTask(0);
     const assertionId = task.umaAssertionId;
-
+    logStep("advanceUmaLiveness + pushResolution(false)");
     await advanceUmaLiveness();
-
     await mockOOv3.pushResolution(assertionId, false);
 
     const clientBalance = await mockToken.balanceOf(await client.getAddress());
+    logStep("client wins", { clientBalance: clientBalance.toString() });
     expect(clientBalance).to.be.gt(ethers.parseEther("1000000"));
   });
 });

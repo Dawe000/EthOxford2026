@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployFixture } from "./helpers/fixtures";
 import { advancePastDeadline } from "./helpers/time";
+import { logStep } from "./helpers/logger";
 
 describe("AgentTaskEscrow - Path C (Timeout Cancellation)", function () {
   it("deadline exceeded, client cancels, gets refund, agent stake slashed", async function () {
@@ -24,12 +25,16 @@ describe("AgentTaskEscrow - Path C (Timeout Cancellation)", function () {
     await mockToken.connect(client).approve(await escrow.getAddress(), paymentAmount);
     await escrow.connect(client).depositPayment(0);
 
+    logStep("advancePastDeadline", { deadline });
     await advancePastDeadline(deadline);
 
     const clientBalanceBefore = await mockToken.balanceOf(await client.getAddress());
+    logStep("timeoutCancellation", { taskId: 0, reason: "deadline exceeded" });
     await escrow.connect(client).timeoutCancellation(0, "deadline exceeded");
     const clientBalanceAfter = await mockToken.balanceOf(await client.getAddress());
 
-    expect(clientBalanceAfter - clientBalanceBefore).to.equal(paymentAmount + stakeAmount);
+    const delta = clientBalanceAfter - clientBalanceBefore;
+    logStep("client payout", { delta: delta.toString(), expected: "payment + slashed stake" });
+    expect(delta).to.equal(paymentAmount + stakeAmount);
   });
 });

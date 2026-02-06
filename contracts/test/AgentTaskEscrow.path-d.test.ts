@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployFixture } from "./helpers/fixtures";
+import { logStep } from "./helpers/logger";
 
 describe("AgentTaskEscrow - Path D (Agent Cannot Complete)", function () {
   it("agent signals cannot complete, both get refunds, no MM fee", async function () {
@@ -26,11 +27,13 @@ describe("AgentTaskEscrow - Path D (Agent Cannot Complete)", function () {
     const clientBalanceBefore = await mockToken.balanceOf(await client.getAddress());
     const agentBalanceBefore = await mockToken.balanceOf(await agent.getAddress());
 
+    logStep("cannotComplete", { taskId: 0, reason: "resource unavailable" });
     await escrow.connect(agent).cannotComplete(0, "resource unavailable");
 
     const clientBalanceAfter = await mockToken.balanceOf(await client.getAddress());
     const agentBalanceAfter = await mockToken.balanceOf(await agent.getAddress());
 
+    logStep("refunds", { clientDelta: (clientBalanceAfter - clientBalanceBefore).toString(), agentDelta: (agentBalanceAfter - agentBalanceBefore).toString() });
     expect(clientBalanceAfter - clientBalanceBefore).to.equal(paymentAmount);
     expect(agentBalanceAfter - agentBalanceBefore).to.equal(stakeAmount);
   });
