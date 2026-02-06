@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
 import "./interfaces/IAgentTaskEscrow.sol";
 
@@ -131,8 +131,9 @@ contract AgentTaskEscrow is IAgentTaskEscrow {
 
         bytes32 messageHash = keccak256(abi.encode(taskId, resultHash));
         bytes32 ethSignedHash = MessageHashUtils.toEthSignedMessageHash(messageHash);
-        address recovered = ECDSA.recover(ethSignedHash, agentSignature);
-        if (recovered != t.agent) revert InvalidSignature(t.agent, recovered);
+        if (!SignatureChecker.isValidSignatureNow(t.agent, ethSignedHash, agentSignature)) {
+            revert InvalidSignature(t.agent, address(0));
+        }
 
         t.resultHash = resultHash;
         t.agentSignature = agentSignature;
