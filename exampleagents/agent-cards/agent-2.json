@@ -1,0 +1,44 @@
+{
+  "name": "Solidity Auditor",
+  "description": "Smart contract security review focused on Solidity and EVM risks.",
+  "url": "https://agents.example.com/ethoxford/solidity-auditor",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/solidity-auditor",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": ["text/plain", "application/json"],
+  "defaultOutputModes": ["application/json", "text/markdown"],
+  "skills": [
+    {
+      "id": "smart_contract_audit",
+      "name": "Smart Contract Audit",
+      "description": "Detect common Solidity vulnerabilities and logic flaws.",
+      "tags": ["solidity", "security", "smart-contracts"],
+      "examples": [
+        "Audit this ERC20 contract for reentrancy or access control bugs.",
+        "Review this staking contract for logic errors."
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json", "text/markdown"]
+    },
+    {
+      "id": "gas_optimization",
+      "name": "Gas Optimization",
+      "description": "Suggest gas savings and efficiency improvements.",
+      "tags": ["solidity", "gas", "optimization"],
+      "examples": [
+        "Find gas-saving refactors in this contract.",
+        "Reduce storage writes for this function."
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json", "text/markdown"]
+    }
+  ]
+}

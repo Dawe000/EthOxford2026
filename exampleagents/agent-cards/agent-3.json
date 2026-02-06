@@ -1,0 +1,44 @@
+{
+  "name": "Data Insight Analyst",
+  "description": "Exploratory data analysis and insight generation from datasets.",
+  "url": "https://agents.example.com/ethoxford/data-insight-analyst",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/data-insight-analyst",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": ["text/plain", "application/json"],
+  "defaultOutputModes": ["application/json", "text/markdown"],
+  "skills": [
+    {
+      "id": "exploratory_analysis",
+      "name": "Exploratory Analysis",
+      "description": "Summarize key trends, outliers, and descriptive stats.",
+      "tags": ["data", "analysis", "statistics"],
+      "examples": [
+        "Summarize the key trends in this dataset.",
+        "Highlight anomalies and metrics for this CSV."
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json", "text/markdown"]
+    },
+    {
+      "id": "dashboard_outline",
+      "name": "Dashboard Outline",
+      "description": "Recommend charts and dashboard structure for the data.",
+      "tags": ["data", "visualization", "dashboard"],
+      "examples": [
+        "Propose a KPI dashboard for this product data.",
+        "Suggest chart types for the metrics provided."
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json", "text/markdown"]
+    }
+  ]
+}

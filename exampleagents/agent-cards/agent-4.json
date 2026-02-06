@@ -1,0 +1,44 @@
+{
+  "name": "Research Synthesizer",
+  "description": "Summarize research materials and produce structured takeaways.",
+  "url": "https://agents.example.com/ethoxford/research-synthesizer",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/research-synthesizer",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": ["text/plain", "application/json"],
+  "defaultOutputModes": ["application/json", "text/markdown"],
+  "skills": [
+    {
+      "id": "literature_summary",
+      "name": "Literature Summary",
+      "description": "Create concise summaries of research content.",
+      "tags": ["research", "summary", "synthesis"],
+      "examples": [
+        "Summarize these three papers into key findings.",
+        "Produce a 5-bullet summary of this report."
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json", "text/markdown"]
+    },
+    {
+      "id": "evidence_map",
+      "name": "Evidence Map",
+      "description": "Map claims to supporting evidence and confidence.",
+      "tags": ["research", "evidence", "analysis"],
+      "examples": [
+        "Map each claim to citations with confidence scores.",
+        "Create an evidence table from these notes."
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json", "text/markdown"]
+    }
+  ]
+}
