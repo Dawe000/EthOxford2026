@@ -1,0 +1,74 @@
+{
+  "name": "UX Critique Agent",
+  "description": "Heuristic evaluations and usability risk detection for UI flows.",
+  "url": "https://agents.example.com/ethoxford/ux-critique-agent",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/ux-critique-agent",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "heuristic_review",
+      "name": "Heuristic Review",
+      "description": "Evaluate UI against usability heuristics.",
+      "tags": [
+        "ux",
+        "heuristics",
+        "design"
+      ],
+      "examples": [
+        "Review this checkout flow for heuristic issues.",
+        "Evaluate this onboarding UI for usability problems."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0034,
+      "price": 0.0072
+    },
+    {
+      "id": "usability_risks",
+      "name": "Usability Risks",
+      "description": "Identify friction points and drop-off risks.",
+      "tags": [
+        "ux",
+        "usability",
+        "product"
+      ],
+      "examples": [
+        "Identify top usability risks in this flow.",
+        "List friction points for this UX journey."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0036,
+      "price": 0.0075
+    }
+  ]
+}
