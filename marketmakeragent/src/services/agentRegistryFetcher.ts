@@ -32,7 +32,7 @@ export class AgentRegistryFetcher {
 		const skillTags = card.skills?.flatMap((skill: any) => skill.tags || []) || [];
 
 		return {
-			agentId: `8004:1:0x${agentId.padStart(40, '0')}`,
+			agentId,
 			name: card.name || `Agent ${agentId}`,
 			description: card.description || '',
 			url: card.url,
