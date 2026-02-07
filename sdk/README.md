@@ -65,6 +65,7 @@ const agentSdk = new AgentSDK(config, wallet);
 | `getTask(taskId)` | Fetch task state. |
 | `getMyTasks(inProgressOnly?)` | Get tasks created by this client (uses signer address). |
 | `getTasksNeedingAction()` | Get tasks where client can act (dispute, settleAgentConceded, timeoutCancel). |
+| `fetchEvidenceForTask(taskId, options?)` | Fetch client and agent evidence from task (from clientEvidenceURI, agentEvidenceURI). |
 | `matchAgents(request)` | Query market maker for matching agents. |
 
 ## Agent SDK
@@ -101,6 +102,46 @@ Status helpers: `isInProgress(task)`, `isContested(task)`, `isResolved(task)`, `
 Action helpers: `needsClientDisputeBond(task)`, `needsAgentEscalationBond(task)`, `canClientSettleAgentConceded(...)`, `canAgentSettleNoContest(...)`, `canClientTimeoutCancel(...)`.
 
 Bond amounts: `getDisputeBondAmount(task, disputeBondBps)`, `getEscalationBondAmount(task, escalationBondBps, umaMinBond)`.
+
+## IPFS Fetch (Evidence)
+
+Read content from IPFS URIs (no API key needed):
+
+| Function | Description |
+|----------|-------------|
+| `fetchFromIpfs(uri, options?)` | Fetch content at ipfs://CID or https://gateway/ipfs/CID. Options: `gateway`, `asJson`. |
+| `fetchClientEvidence(uri, options?)` | Fetch content at client evidence URI. |
+| `fetchAgentEvidence(uri, options?)` | Fetch content at agent evidence URI. |
+| `fetchTaskEvidence(task, options?)` | Fetch both clientEvidenceURI and agentEvidenceURI; returns `{ clientEvidence?, agentEvidence? }`. Skips empty URIs. |
+
+Default gateway: `https://ipfs.io/ipfs/`. Use `asJson: true` to parse JSON.
+
+## Cron Agent Flow
+
+Autonomous cron agents can check statuses, inspect evidence, and decide whether to dispute:
+
+1. `clientSdk.getTasksNeedingAction()` – tasks where client can act
+2. For each task with `needsClientDisputeBond(task) && !isCooldownExpired(task, blockTimestamp)`: fetch evidence via `fetchFromIpfs(task.clientEvidenceURI)` or `clientSdk.fetchEvidenceForTask(taskId)`
+3. Apply custom logic (e.g. LLM, rules) to decide whether to dispute
+4. If dispute: `clientSdk.disputeTask(taskId, evidenceObject)` (uploads new evidence) or pass existing URI
+5. For `canClientSettleAgentConceded`: `clientSdk.settleAgentConceded(taskId)`
+6. For `canClientTimeoutCancel`: `clientSdk.timeoutCancellation(taskId, reason)`
+
+Example:
+
+```typescript
+const tasks = await clientSdk.getTasksNeedingAction();
+for (const task of tasks) {
+  if (needsClientDisputeBond(task) && !isCooldownExpired(task, Date.now() / 1000)) {
+    const evidence = await clientSdk.fetchEvidenceForTask(task.id, { asJson: true });
+    if (shouldDispute(evidence)) await clientSdk.disputeTask(task.id, { reason: "..." });
+  }
+  if (canClientSettleAgentConceded(task, Date.now() / 1000, agentResponseWindow))
+    await clientSdk.settleAgentConceded(task.id);
+  if (canClientTimeoutCancel(task, Date.now() / 1000))
+    await clientSdk.timeoutCancellation(task.id, "deadline exceeded");
+}
+```
 
 ## Configuration
 

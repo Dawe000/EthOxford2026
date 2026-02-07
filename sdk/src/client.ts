@@ -12,7 +12,7 @@ import {
   getClientTasksNeedingAction,
   isInProgress,
 } from "./tasks.js";
-import { uploadJson } from "./ipfs.js";
+import { uploadJson, fetchTaskEvidence } from "./ipfs.js";
 import { matchAgents } from "./marketmaker.js";
 
 export class ClientSDK {
@@ -132,6 +132,15 @@ export class ClientSDK {
     );
     if (inProgressOnly) return tasks.filter(isInProgress);
     return tasks;
+  }
+
+  /** Fetch client and agent evidence from task (from clientEvidenceURI, agentEvidenceURI) */
+  async fetchEvidenceForTask(
+    taskId: bigint,
+    options?: { gateway?: string; asJson?: boolean }
+  ): Promise<{ clientEvidence?: string | unknown; agentEvidence?: string | unknown }> {
+    const task = await this.getTask(taskId);
+    return fetchTaskEvidence(task, options);
   }
 
   /** Get tasks where this client can take action (dispute, settleAgentConceded, timeoutCancel) */
