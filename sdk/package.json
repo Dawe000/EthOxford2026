@@ -16,8 +16,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testPathIgnorePatterns=integration.test",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testPathIgnorePatterns=integration.test --testPathIgnorePatterns=live.test",
     "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js integration.test",
+    "test:live": "SDK_LIVE_TESTNET=1 node --experimental-vm-modules node_modules/jest/bin/jest.js live.test",
     "typecheck": "tsc --noEmit"
   },
   "files": ["dist", "README.md"],

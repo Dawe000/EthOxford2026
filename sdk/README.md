@@ -63,6 +63,8 @@ const agentSdk = new AgentSDK(config, wallet);
 | `settleAgentConceded(taskId)` | Settle when agent conceded (no UMA escalation). |
 | `timeoutCancellation(taskId, reason)` | Cancel due to deadline exceeded. |
 | `getTask(taskId)` | Fetch task state. |
+| `getMyTasks(inProgressOnly?)` | Get tasks created by this client (uses signer address). |
+| `getTasksNeedingAction()` | Get tasks where client can act (dispute, settleAgentConceded, timeoutCancel). |
 | `matchAgents(request)` | Query market maker for matching agents. |
 
 ## Agent SDK
@@ -75,6 +77,30 @@ const agentSdk = new AgentSDK(config, wallet);
 | `settleNoContest(taskId)` | Settle after cooldown with no dispute. |
 | `cannotComplete(taskId, reason)` | Signal agent cannot complete. |
 | `getTask(taskId)` | Fetch task state. |
+| `getMyTasks(inProgressOnly?)` | Get tasks accepted by this agent (uses signer address). |
+| `getTasksNeedingAction()` | Get tasks where agent can act (settleNoContest, escalateToUMA). |
+
+## Task Listing and Status Helpers
+
+Standalone functions (Provider-only, no signer required):
+
+| Function | Description |
+|----------|-------------|
+| `getNextTaskId(escrowAddress, provider)` | Get next task ID (total task count). |
+| `getTask(escrowAddress, provider, taskId)` | Fetch task by ID. |
+| `getTasksByClient(escrowAddress, provider, clientAddress)` | Get tasks created by client. |
+| `getTasksByAgent(escrowAddress, provider, agentAddress)` | Get tasks accepted by agent. |
+| `getTasksByIdRange(escrowAddress, provider, fromId, toId)` | Fetch tasks by ID range. |
+| `getClientIntents(escrowAddress, provider, clientAddress, inProgressOnly?)` | Client intents (optionally in-progress only). |
+| `getAgentCommitments(escrowAddress, provider, agentAddress, inProgressOnly?)` | Agent commitments (optionally in-progress only). |
+| `getClientTasksNeedingAction(...)` | Tasks where client can take action. |
+| `getAgentTasksNeedingAction(...)` | Tasks where agent can take action. |
+
+Status helpers: `isInProgress(task)`, `isContested(task)`, `isResolved(task)`, `isCooldownExpired(task, blockTimestamp)`, `isDeadlinePassed(task, blockTimestamp)`.
+
+Action helpers: `needsClientDisputeBond(task)`, `needsAgentEscalationBond(task)`, `canClientSettleAgentConceded(...)`, `canAgentSettleNoContest(...)`, `canClientTimeoutCancel(...)`.
+
+Bond amounts: `getDisputeBondAmount(task, disputeBondBps)`, `getEscalationBondAmount(task, escalationBondBps, umaMinBond)`.
 
 ## Configuration
 
@@ -152,9 +178,24 @@ export RPC_URL=http://127.0.0.1:8545
 cd sdk && npm run test:integration
 ```
 
+## Live Plasma Testnet Testing
+
+Run read-only tests against Plasma testnet (chainId 9746):
+
+```bash
+export SDK_LIVE_TESTNET=1
+export MNEMONIC="your twelve word mnemonic"
+cd sdk && npm run test:live
+```
+
+Tests: `getNextTaskId`, `getTask`, `getTasksByClient`, `getTasksByAgent`, status helpers, `getMyTasks`, `getTasksNeedingAction`.
+
+Optional: set `SDK_LIVE_RUN_FLOW=1` to run a full Path A flow (creates task, costs tokens).
+
 ## Scripts
 
 - `npm run build` - Compile TypeScript
-- `npm test` - Run unit tests (excludes integration)
+- `npm test` - Run unit tests (excludes integration and live)
 - `npm run test:integration` - Run integration tests (requires env vars)
+- `npm run test:live` - Run live Plasma testnet tests (requires SDK_LIVE_TESTNET=1, MNEMONIC)
 - `npm run typecheck` - Type check without emit

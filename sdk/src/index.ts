@@ -22,3 +22,29 @@ export { calculateResultHash, signTaskResult } from "./crypto.js";
 export { uploadJson, uploadFile } from "./ipfs.js";
 export { matchAgents } from "./marketmaker.js";
 export { getEscrowContract, getErc20Contract, parseTask, ensureAllowance } from "./contract.js";
+export type { TaskAction, EscrowTimingConfig } from "./tasks.js";
+export {
+  getNextTaskId,
+  getTask,
+  getTasksByIdRange,
+  getTasksByClient,
+  getTasksByAgent,
+  getClientIntents,
+  getAgentCommitments,
+  getClientTasksNeedingAction,
+  getAgentTasksNeedingAction,
+  isInProgress,
+  isContested,
+  isResolved,
+  isCooldownExpired,
+  isDeadlinePassed,
+  needsClientDisputeBond,
+  needsAgentEscalationBond,
+  canClientSettleAgentConceded,
+  canAgentSettleNoContest,
+  canClientTimeoutCancel,
+  getDisputeBondAmount,
+  getEscalationBondAmount,
+  getClientTaskAction,
+  getAgentTaskAction,
+} from "./tasks.js";
