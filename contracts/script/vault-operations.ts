@@ -20,7 +20,7 @@ import { ethers } from "hardhat";
 const CONFIG = {
   VAULT: "0xe07484f61fc5C02464ceE533D7535D0b5a257f22",
   FTESTXRP: "0x0b6A3645c240605887a5532109323A3E12273dc7",
-  ESCROW: "0xA4E4C1772d3d2f604734609608009C46C5E32537",
+  ESCROW: "0x3419513f9636760C29033Fed040E7E1278Fa7B2b",
 };
 
 const ERC20_ABI = [
@@ -48,9 +48,9 @@ const VAULT_ABI = [
 ];
 
 const ESCROW_ABI = [
-  "function createTask(string memory descriptionURI, address paymentToken, uint256 paymentAmount, uint256 deadline) external returns (uint256)",
+  "function createTask(string memory descriptionURI, address paymentToken, uint256 paymentAmount, uint256 deadline, address stakeToken) external returns (uint256)",
   "function acceptTask(uint256 taskId, uint256 stakeAmount) external",
-  "function tasks(uint256) external view returns (address client, address agent, address paymentToken, uint256 paymentAmount, uint256 agentStake, uint256 deadline, uint8 status, uint256 cooldownEnd, bytes32 resultHash, uint256 clientDisputeBond, uint256 agentEscalationBond)",
+  "function tasks(uint256) external view returns (address client, address agent, address paymentToken, uint256 paymentAmount, uint256 agentStake, uint256 deadline, uint8 status, uint256 cooldownEnd, bytes32 resultHash, uint256 clientDisputeBond, uint256 agentEscalationBond, address stakeToken)",
 ];
 
 // ============================================================================
@@ -250,7 +250,7 @@ async function fullFlow() {
   console.log(`✅ yFXRP balance: ${ethers.formatUnits(yFXRPBalance, decimals)}`);
 
   // Step 2: Create task (as client)
-  console.log("\n📝 Step 2: Create task (paying with FXRP)");
+  console.log("\n📝 Step 2: Create task (paying with FXRP, staking yFXRP)");
   const paymentAmount = ethers.parseUnits("1", decimals);
   const deadline = Math.floor(Date.now() / 1000) + 86400;
 
@@ -259,32 +259,34 @@ async function fullFlow() {
 
   const createTx = await escrow.createTask(
     "ipfs://test-task",
-    CONFIG.FTESTXRP,
+    CONFIG.FTESTXRP,     // paymentToken (FXRP)
     paymentAmount,
-    deadline
+    deadline,
+    CONFIG.VAULT         // stakeToken (yFXRP)
   );
   await createTx.wait();
   console.log("✅ Task created");
 
-  // Step 3: Accept task (stake FXRP, keep yFXRP earning yield)
-  console.log("\n📝 Step 3: Accept task (stake FXRP, yFXRP keeps earning)");
+  // Step 3: Accept task (stake yFXRP, which keeps earning yield)
+  console.log("\n📝 Step 3: Accept task (stake yFXRP)");
   const stakeAmount = ethers.parseUnits("0.5", decimals);
 
-  const approveTx3 = await fxrp.approve(CONFIG.ESCROW, stakeAmount);
+  const yFXRP = new ethers.Contract(CONFIG.VAULT, ERC20_ABI, signer);
+  const approveTx3 = await yFXRP.approve(CONFIG.ESCROW, stakeAmount);
   await approveTx3.wait();
 
   // Note: Using taskId 0 - in production, parse from event
   const acceptTx = await escrow.acceptTask(0, stakeAmount);
   await acceptTx.wait();
-  console.log("✅ Task accepted with FXRP stake");
+  console.log("✅ Task accepted with yFXRP stake");
 
   // Summary
   console.log("\n=== Summary ===");
   const finalYFXRP = await vault.balanceOf(signerAddress);
   const finalValue = await vault.convertToAssets(finalYFXRP);
-  console.log(`💎 yFXRP earning yield: ${ethers.formatUnits(finalYFXRP, decimals)}`);
-  console.log(`💰 Current value: ${ethers.formatUnits(finalValue, decimals)} FXRP`);
-  console.log(`🔒 FXRP staked in escrow: ${ethers.formatUnits(stakeAmount, decimals)}`);
+  console.log(`💎 yFXRP remaining: ${ethers.formatUnits(finalYFXRP, decimals)}`);
+  console.log(`💰 Remaining value: ${ethers.formatUnits(finalValue, decimals)} FXRP`);
+  console.log(`🔒 yFXRP staked in escrow: ${ethers.formatUnits(stakeAmount, decimals)}`);
 }
 
 // ============================================================================
