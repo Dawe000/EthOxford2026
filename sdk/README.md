@@ -99,6 +99,7 @@ Standalone functions (Provider-only, no signer required):
 | `getTaskDescriptionUri(escrowAddress, provider, taskId)` | Fetch task description URI from TaskCreated event (null if none). |
 | `getEscalatedDisputes(escrowAddress, provider, fromBlock, toBlock?)` | Fetch escalated disputes from TaskDisputeEscalated events (event-based). |
 | `getEscalationBlockForTask(escrowAddress, provider, taskId, fromBlock?)` | Fetch block when task was escalated (null if none). |
+| `fetchTaskSpecFromOnchainUri(escrowAddress, provider, taskId, options?)` | Resolve `descriptionURI`, fetch IPFS content, and parse canonical task spec. |
 | `getEscrowConfig(escrowAddress, provider)` | Fetch escrow timing and bond params (cooldownPeriod, agentResponseWindow, disputeBondBps, escalationBondBps, umaConfig). |
 | `getTasksByClient(escrowAddress, provider, clientAddress)` | Get tasks created by client. |
 | `getTasksByAgent(escrowAddress, provider, agentAddress)` | Get tasks accepted by agent. |
@@ -115,6 +116,12 @@ Action helpers: `needsClientDisputeBond(task)`, `needsAgentEscalationBond(task)`
 Bond amounts: `getDisputeBondAmount(task, disputeBondBps)`, `getEscalationBondAmount(task, escalationBondBps, umaMinBond)`.
 
 Use `getEscrowConfig` to obtain `agentResponseWindow`, `disputeBondBps`, and `umaConfig.minimumBond` for status helpers and bond calculations. Use `getTaskDescriptionUri` with `fetchFromIpfs` to load task spec when deciding whether to dispute.
+
+Task spec helpers:
+
+- `ONCHAIN_TASK_SPEC_V1` (`"erc8001-task/v1"`)
+- `parseOnchainTaskSpec(raw)`
+- `OnchainTaskSpecV1` type for canonical JSON payloads
 
 When status is `ResultAsserted`, `task.resultURI` (if set) points to the agent's result content - fetch via `fetchFromIpfs(task.resultURI)` and verify `keccak256(result) === task.resultHash`.
 
