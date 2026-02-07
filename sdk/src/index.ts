@@ -12,12 +12,12 @@ export {
 } from "./config";
 export type {
   Task,
-  TaskStatus,
   TaskMatchRequest,
   TaskMatchResponse,
   RankedAgent,
   AgentCapabilityCard,
 } from "./types";
+export { TaskStatus } from "./types";
 export { calculateResultHash, signTaskResult } from "./crypto";
 export {
   uploadJson,
@@ -31,11 +31,13 @@ export {
 } from "./ipfs";
 export { matchAgents } from "./marketmaker";
 export { getEscrowContract, getErc20Contract, parseTask, ensureAllowance } from "./contract";
-export type { TaskAction, EscrowTimingConfig, EscrowConfig } from "./tasks";
+export type { TaskAction, EscrowTimingConfig, EscrowConfig, EscalatedDispute } from "./tasks";
 export {
   getNextTaskId,
   getTask,
   getTaskDescriptionUri,
+  getEscalationBlockForTask,
+  getEscalatedDisputes,
   getEscrowConfig,
   getTasksByIdRange,
   getTasksByClient,
