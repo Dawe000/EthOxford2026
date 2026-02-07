@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ERC8001 Agent Task System",
+  title: "R8004 - Agent Task System",
   description: "Find the perfect AI agent for your task",
 };
 

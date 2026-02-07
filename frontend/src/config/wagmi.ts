@@ -16,7 +16,7 @@ const plasmaTestnet = defineChain({
 });
 
 export const config = getDefaultConfig({
-  appName: 'EthOxford Agents',
+  appName: 'R8004',
   projectId: 'a59037b8702f516c13be8975f7048277', 
   chains: [plasmaTestnet],
   ssr: true,

@@ -134,11 +134,16 @@ export default function Home() {
 
       {/* Navbar */}
       <nav className="flex-none flex items-center justify-between py-4 px-8 border-b border-white/5 relative z-30 backdrop-blur-md bg-background/20">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
-            <HubIcon className="text-white w-5 h-5" />
+        <div className="flex items-center gap-3">
+            <div className="w-16 h-16 relative"> 
+            <Image 
+              src="/R8004_logo.png" 
+              alt="R8004 Logo" 
+              fill 
+              className="object-contain"
+            />
           </div>
-          <span className="text-lg font-bold tracking-tight text-white">EthOxford<span className="text-primary">Agents</span></span>
+          <span className="text-4xl font-black tracking-tighter text-white">R8004</span> 
         </div>
         <div className="hidden md:flex gap-1 p-1 bg-white/5 rounded-full border border-white/10">
           <button className="px-4 py-1.5 rounded-full bg-white/10 text-white font-medium text-xs transition-all">Exchange</button>
