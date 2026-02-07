@@ -28,6 +28,15 @@ const config: HardhatUserConfig = {
           ? [process.env.DEPLOYER_PRIVATE_KEY]
           : [],
     },
+    coston2: {
+      url: "https://coston2-api.flare.network/ext/C/rpc",
+      chainId: 114,
+      accounts: process.env.MNEMONIC
+        ? { mnemonic: process.env.MNEMONIC }
+        : process.env.DEPLOYER_PRIVATE_KEY
+          ? [process.env.DEPLOYER_PRIVATE_KEY]
+          : [],
+    },
   },
   paths: {
     sources: "./src",

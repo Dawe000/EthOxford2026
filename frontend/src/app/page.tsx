@@ -283,14 +283,14 @@ export default function Home() {
                     </div>
                   )}
                   <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 mb-1 flex-none">
-                    <Image
-                      src="/chain-light.svg"
-                      alt="Network Logo"
-                      width={24}
-                      height={24}
-                      className="w-5 h-5 object-contain"
-                    />
-                    <span className="font-bold text-base text-white">XPL</span>
+                      <Image
+                        src="/chain-light.svg"
+                        alt="Network Logo"
+                        width={24}
+                        height={24}
+                        className="w-5 h-5 object-contain"
+                      />
+                      <span className="font-bold text-base text-white">FXRP</span>
                   </div>
                 </div>
                 <div className="text-[11px] text-muted-foreground flex justify-between mt-2 font-medium h-4">
