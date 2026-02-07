@@ -1,16 +1,24 @@
-# ERC8001 Agent Task System
+# R8004 - Intent based Onchain AI agent Task Execution
 
-An intent-based system for agent tasks with a market maker and UMA-based dispute resolution.
+A decentralized, intent-based system for AI agent services with trustless escrow, yield-bearing collateral, and UMA-powered dispute resolution.
 
 ## Overview
 
-This project implements the ERC8001 Agent Task System—enabling clients to create natural-language task intents, agents to accept and execute them with stake, and UMA to secure disputed outcomes. Normal flows avoid UMA/IPFS entirely; disputes escalate only when needed.
+R8004 enables clients to post natural-language task intents that agents discover via semantic search, accept with collateral, execute off-chain, and settle on-chain—all without centralized intermediaries. The system combines **ERC-8001 intents**, **ERC-8004 semantic search**, **yield-bearing vault collateral**, and **UMA's optimistic oracle** to create a capital-efficient, cross-chain agent economy.
+
+**Key Innovations**:
+- **Yield-bearing collateral**: Agents stake vault shares (yFXRP on Flare, USDT on Plasma) that earn passive income during tasks
+- **Off-chain-first execution**: Results stored off-chain; evidence uploaded only during disputes (gas-efficient)
+- **Multi-chain support**: Flare Coston2 (FAssets/XRPL liquidity) + Plasma (USDT0 stablecoin)
+- **Optimistic settlement**: 24hr cooldown for instant payouts; disputes resolved by UMA or AI-powered DVM
 
 ## Project Structure
 
 | Folder | Purpose |
 |--------|---------|
-| `contracts/` | Smart contracts (AgentTaskEscrow, MockOOv3, MockERC20) |
+| `contracts/` | Smart contracts (AgentTaskEscrow, MockOOv3, MockERC20, ERC-4626 Vault) |
+| `contracts/script/flare/` | **Flare Coston2 scripts**: Deploy vault, run E2E tests, check balances |
+| `contracts/script/plasma/` | **Plasma testnet scripts**: Deploy contracts, mint USDT, run dispute flows |
 | `sdk/` | TypeScript SDK for client/agent interactions (on-chain, IPFS, market maker) |
 | `dvm-agent/` | Cloudflare Worker: resolves UMA disputes via Venice AI (cron every 5 min) |
 | `marketmakeragent/` | Market maker: routes tasks to agents via semantic search |
@@ -22,24 +30,77 @@ This project implements the ERC8001 Agent Task System—enabling clients to crea
 
 ## Quick Start
 
-- **Contracts:** `cd contracts && npm install && npm run compile`
-- **SDK:** `npm install @erc8001/agent-task-sdk ethers` – see `sdk/README.md`
-- **Frontend:** `cd frontend && npm install && npm run dev` – see `frontend/README.md`
-- **Plasma testnet flows:** `cd contracts && npm run testnet:flow:path-a`
-- **DVM (dispute resolution):** `cd dvm-agent && npm run deploy` – see `dvm-agent/README.md`
+### Core Setup
+```bash
+# 1. Install dependencies
+cd contracts && npm install && npm run compile
 
-From repo root: `npm run sync:agent-vectors` populates Pinecone for the market maker and example agents (requires `VENICE_API_KEY`, `PINECONE_API_KEY`, `PINECONE_INDEX_HOST` in root `.env`; see `exampleagents/README.md` and `marketmakeragent/README.md`).
+# 2. Test on Flare Coston2 (FXRP payments, yFXRP collateral)
+OP=flow npx hardhat run script/flare/vault-operations.ts --network coston2
 
-See each module's README for setup and usage.
+# 3. Test on Plasma (USDT payments, happy path)
+npm run testnet:flow:path-a
+```
 
-## Flare Integration
+### Full System
+- **Frontend**: `cd frontend && npm install && npm run dev` (Next.js UI for task creation)
+- **Market Maker**: `cd marketmakeragent && npm run dev` (Routes tasks via semantic search)
+- **Example Agents**: `cd exampleagents && npm run dev` (35 agent implementations)
+- **DVM Resolver**: `cd dvm-agent && npm run deploy` (Venice AI-powered UMA dispute resolution)
 
-This project leverages **Flare's FAssets protocol** to enable cross-chain XRPL liquidity for agent task settlements. See [contracts/script/flare/](./contracts/script/flare/) for:
-- **[contracts/script/flare/README.md](./contracts/script/flare/README.md)** - Quick start guide and script reference
-- **[contracts/script/flare/FLARE_INTEGRATION.md](./contracts/script/flare/FLARE_INTEGRATION.md)** - Technical architecture, developer feedback, and bounty qualification
-- **[contracts/script/flare/](./contracts/script/flare/)** - Deployment and testing scripts for Coston2
+### Agent Vector Sync
+```bash
+# From repo root (populates Pinecone for semantic search)
+npm run sync:agent-vectors
+```
+Requires `.env` with `VENICE_API_KEY`, `PINECONE_API_KEY`, `PINECONE_INDEX_HOST`
 
-**Key Innovation**: Agents stake yFXRP (yield-bearing FXRP vault shares) as collateral, earning 5-10% APY during task execution while maintaining trustless escrow security.
+See each module's README for detailed setup and usage.
+
+## Blockchain Integrations
+
+### Flare Network (Coston2 Testnet)
+
+**Why Flare**: Unlocks **XRPL's $30B+ liquidity** for agent marketplaces via FAssets, enabling cross-chain collateral without wrapped tokens or CEX custody. Agents stake **yFXRP** (yield-bearing FXRP vault shares) to earn **5-10% APY** on required collateral—turning idle capital into productive yield.
+
+**Key Benefits**:
+- **Cross-chain liquidity**: XRPL → Flare seamlessly via enshrined FAssets protocol
+- **Yield-bearing collateral**: Custom ERC-4626 vault wraps FXRP for continuous yield during tasks
+- **Trustless bridge**: No external dependencies (Wormhole/LayerZero risk eliminated)
+
+**Resources**:
+- **[contracts/script/flare/README.md](./contracts/script/flare/README.md)** - Scripts to deploy vault, run E2E tests, check balances
+- **[contracts/script/flare/FLARE_INTEGRATION.md](./contracts/script/flare/FLARE_INTEGRATION.md)** - Full technical guide, developer feedback, bounty qualification
+- **Live deployment**: Escrow `0x3419513f9636760C29033Fed040E7E1278Fa7B2b`, Vault `0xe07484f61fc5C02464ceE533D7535D0b5a257f22` (Coston2)
+
+**Quick Start**:
+```bash
+cd contracts
+OP=flow npx hardhat run script/flare/vault-operations.ts --network coston2
+```
+
+---
+
+### Plasma Network (Testnet)
+
+**Why Plasma**: **USDT0** provides the perfect agent payment token—deterministic 1:1 dollar backing eliminates price volatility, low gas fees reduce operational costs, and EVM compatibility enables standard tooling. Agents accept USDT0 with confidence knowing value won't fluctuate between task acceptance and settlement.
+
+**Key Benefits**:
+- **Price stability**: USDT0 is 1:1 backed with USD (no spike risk during multi-day tasks)
+- **Deterministic payments**: Agents know exact payout value upfront (vs volatile ETH/BTC)
+- **Low gas fees**: L1 efficiency without mainnet costs
+- **Universal acceptance**: Stablecoin standard familiar to global agents
+
+**Resources**:
+- **[contracts/script/plasma/README.md](./contracts/script/plasma/README.md)** - Deploy contracts, mint tokens, run E2E flows (Path A/B/C)
+- **Live deployment**: Check `contracts/deployments/plasma-testnet.json`
+
+**Quick Start**:
+```bash
+cd contracts
+npm run testnet:flow:path-a  # Happy path
+npm run testnet:flow:path-c  # UMA dispute escalation
+```
 
 ## References
 
