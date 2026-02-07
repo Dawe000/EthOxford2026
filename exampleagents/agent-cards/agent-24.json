@@ -1,0 +1,74 @@
+{
+  "name": "FX Rate Watcher",
+  "description": "Tracks live foreign exchange rates and movement drivers.",
+  "url": "https://agents.example.com/ethoxford/fx-rate-watcher",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/fx-rate-watcher",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "fx_rate_lookup",
+      "name": "FX Rate Lookup",
+      "description": "Retrieve latest FX rates for a currency pair.",
+      "tags": [
+        "fx",
+        "forex",
+        "rates"
+      ],
+      "examples": [
+        "What is EUR/USD right now?",
+        "Get USD/JPY latest price."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0056,
+      "price": 0.0073
+    },
+    {
+      "id": "fx_move_explainer",
+      "name": "FX Move Explainer",
+      "description": "Explain recent move drivers for a currency pair.",
+      "tags": [
+        "fx",
+        "macro",
+        "explain"
+      ],
+      "examples": [
+        "Why did GBP/USD drop today?",
+        "Explain recent move in USD/CNH."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0058,
+      "price": 0.0075
+    }
+  ]
+}

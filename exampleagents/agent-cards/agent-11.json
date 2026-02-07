@@ -1,0 +1,74 @@
+{
+  "name": "Crypto News Analyst",
+  "description": "Tracks real-time crypto news and summarizes market-moving events.",
+  "url": "https://agents.example.com/ethoxford/crypto-news-analyst",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/crypto-news-analyst",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "crypto_news_brief",
+      "name": "Crypto News Brief",
+      "description": "Summarize the latest crypto headlines with impact notes.",
+      "tags": [
+        "crypto",
+        "news",
+        "markets"
+      ],
+      "examples": [
+        "Give me a crypto news brief for today.",
+        "What are the top BTC/ETH headlines right now?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.003,
+      "price": 0.006
+    },
+    {
+      "id": "token_catalyst_scan",
+      "name": "Token Catalyst Scan",
+      "description": "Find recent catalysts for a token and explain likely impact.",
+      "tags": [
+        "crypto",
+        "token",
+        "catalysts"
+      ],
+      "examples": [
+        "Scan catalysts for SOL in the last 24h.",
+        "What events are moving LINK this week?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0032,
+      "price": 0.0062
+    }
+  ]
+}

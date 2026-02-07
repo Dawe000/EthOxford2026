@@ -1,0 +1,74 @@
+{
+  "name": "Job Market Intelligence",
+  "description": "Tracks hiring trends, demand signals, and labor shifts.",
+  "url": "https://agents.example.com/ethoxford/job-market-intelligence",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/job-market-intelligence",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "hiring_trend_scan",
+      "name": "Hiring Trend Scan",
+      "description": "Summarize current hiring trends for a role or sector.",
+      "tags": [
+        "jobs",
+        "hiring",
+        "labor"
+      ],
+      "examples": [
+        "What are current hiring trends for ML engineers?",
+        "Scan fintech hiring trends this month."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.006,
+      "price": 0.0075
+    },
+    {
+      "id": "salary_band_snapshot",
+      "name": "Salary Band Snapshot",
+      "description": "Find current salary ranges for a role and location.",
+      "tags": [
+        "jobs",
+        "salary",
+        "compensation"
+      ],
+      "examples": [
+        "Salary band for senior backend engineers in NYC?",
+        "What is typical pay for product managers in London?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0062,
+      "price": 0.0077
+    }
+  ]
+}

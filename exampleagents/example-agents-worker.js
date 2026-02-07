@@ -1,4 +1,4 @@
-// Multi-agent Cloudflare Worker for ERC8001 example agents (routes /1 through /10)
+// Multi-agent Cloudflare Worker for ERC8001 example agents (routes /1 through /30)
 import agentCard1 from './agent-cards/agent-1.json' assert { type: 'json' };
 import agentCard2 from './agent-cards/agent-2.json' assert { type: 'json' };
 import agentCard3 from './agent-cards/agent-3.json' assert { type: 'json' };
@@ -9,6 +9,26 @@ import agentCard7 from './agent-cards/agent-7.json' assert { type: 'json' };
 import agentCard8 from './agent-cards/agent-8.json' assert { type: 'json' };
 import agentCard9 from './agent-cards/agent-9.json' assert { type: 'json' };
 import agentCard10 from './agent-cards/agent-10.json' assert { type: 'json' };
+import agentCard11 from './agent-cards/agent-11.json' assert { type: 'json' };
+import agentCard12 from './agent-cards/agent-12.json' assert { type: 'json' };
+import agentCard13 from './agent-cards/agent-13.json' assert { type: 'json' };
+import agentCard14 from './agent-cards/agent-14.json' assert { type: 'json' };
+import agentCard15 from './agent-cards/agent-15.json' assert { type: 'json' };
+import agentCard16 from './agent-cards/agent-16.json' assert { type: 'json' };
+import agentCard17 from './agent-cards/agent-17.json' assert { type: 'json' };
+import agentCard18 from './agent-cards/agent-18.json' assert { type: 'json' };
+import agentCard19 from './agent-cards/agent-19.json' assert { type: 'json' };
+import agentCard20 from './agent-cards/agent-20.json' assert { type: 'json' };
+import agentCard21 from './agent-cards/agent-21.json' assert { type: 'json' };
+import agentCard22 from './agent-cards/agent-22.json' assert { type: 'json' };
+import agentCard23 from './agent-cards/agent-23.json' assert { type: 'json' };
+import agentCard24 from './agent-cards/agent-24.json' assert { type: 'json' };
+import agentCard25 from './agent-cards/agent-25.json' assert { type: 'json' };
+import agentCard26 from './agent-cards/agent-26.json' assert { type: 'json' };
+import agentCard27 from './agent-cards/agent-27.json' assert { type: 'json' };
+import agentCard28 from './agent-cards/agent-28.json' assert { type: 'json' };
+import agentCard29 from './agent-cards/agent-29.json' assert { type: 'json' };
+import agentCard30 from './agent-cards/agent-30.json' assert { type: 'json' };
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -43,7 +63,7 @@ export default {
 
     if (!agent || !agentCard) {
       return jsonResponse(
-        { error: 'Unknown agent route. Use /1 through /10.' },
+        { error: 'Unknown agent route. Use one of the configured agent IDs.' },
         404,
         corsHeaders
       );
@@ -346,6 +366,26 @@ const AGENT_CARDS = {
   '8': agentCard8,
   '9': agentCard9,
   '10': agentCard10,
+  '11': agentCard11,
+  '12': agentCard12,
+  '13': agentCard13,
+  '14': agentCard14,
+  '15': agentCard15,
+  '16': agentCard16,
+  '17': agentCard17,
+  '18': agentCard18,
+  '19': agentCard19,
+  '20': agentCard20,
+  '21': agentCard21,
+  '22': agentCard22,
+  '23': agentCard23,
+  '24': agentCard24,
+  '25': agentCard25,
+  '26': agentCard26,
+  '27': agentCard27,
+  '28': agentCard28,
+  '29': agentCard29,
+  '30': agentCard30,
 };
 
 const AGENTS = {
@@ -538,3 +578,22 @@ const AGENTS = {
     ],
   },
 };
+
+function buildDefaultAgentRuntime(agentId, card) {
+  return {
+    id: agentId,
+    skills: card.skills.map((skill) => ({
+      id: skill.id,
+      systemPrompt:
+        `You are ${card.name}. ${skill.description} ` +
+        'Return strict JSON with keys: task, summary, findings (array), asOf (ISO timestamp), and sources (array of {title,url}).',
+      userPrompt: `${skill.name}:`,
+    })),
+  };
+}
+
+for (const [agentId, card] of Object.entries(AGENT_CARDS)) {
+  if (!AGENTS[agentId]) {
+    AGENTS[agentId] = buildDefaultAgentRuntime(agentId, card);
+  }
+}

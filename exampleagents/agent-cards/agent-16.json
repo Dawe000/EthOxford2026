@@ -1,0 +1,74 @@
+{
+  "name": "Tokenomics Reviewer",
+  "description": "Reviews tokenomics design, emissions, and unlock schedules.",
+  "url": "https://agents.example.com/ethoxford/tokenomics-reviewer",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/tokenomics-reviewer",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "tokenomics_snapshot",
+      "name": "Tokenomics Snapshot",
+      "description": "Summarize supply, inflation, and utility model for a token.",
+      "tags": [
+        "tokenomics",
+        "supply",
+        "inflation"
+      ],
+      "examples": [
+        "Give me a tokenomics snapshot for ARB.",
+        "Summarize tokenomics for OP."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.004,
+      "price": 0.0065
+    },
+    {
+      "id": "unlock_schedule_risk",
+      "name": "Unlock Risk Review",
+      "description": "Assess upcoming unlock events and potential sell pressure.",
+      "tags": [
+        "tokenomics",
+        "unlocks",
+        "risk"
+      ],
+      "examples": [
+        "Any risky unlocks for this token in the next month?",
+        "Review unlock risk for SUI."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0042,
+      "price": 0.0067
+    }
+  ]
+}

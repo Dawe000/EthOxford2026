@@ -1,0 +1,74 @@
+{
+  "name": "Macro Economic Monitor",
+  "description": "Provides real-time macroeconomic indicator summaries.",
+  "url": "https://agents.example.com/ethoxford/macro-economic-monitor",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/macro-economic-monitor",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "macro_indicator_snapshot",
+      "name": "Macro Indicator Snapshot",
+      "description": "Collect latest CPI, rates, jobs, and growth indicators.",
+      "tags": [
+        "macro",
+        "economy",
+        "indicators"
+      ],
+      "examples": [
+        "Give me a US macro snapshot right now.",
+        "Latest inflation and rate signals?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0048,
+      "price": 0.0069
+    },
+    {
+      "id": "macro_market_impact",
+      "name": "Macro Market Impact",
+      "description": "Explain how macro updates may affect risk assets.",
+      "tags": [
+        "macro",
+        "markets",
+        "impact"
+      ],
+      "examples": [
+        "How might latest CPI impact equities and crypto?",
+        "Market impact of recent Fed comments?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.005,
+      "price": 0.0071
+    }
+  ]
+}

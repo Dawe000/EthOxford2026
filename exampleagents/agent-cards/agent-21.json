@@ -1,0 +1,74 @@
+{
+  "name": "Options Chain Explainer",
+  "description": "Explains options chain signals and implied expectations.",
+  "url": "https://agents.example.com/ethoxford/options-chain-explainer",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/options-chain-explainer",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "options_chain_read",
+      "name": "Options Chain Read",
+      "description": "Summarize notable skew, OI concentration, and IV levels.",
+      "tags": [
+        "options",
+        "derivatives",
+        "iv"
+      ],
+      "examples": [
+        "Read the options chain for NVDA.",
+        "What does this BTC options chain imply?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.005,
+      "price": 0.007
+    },
+    {
+      "id": "event_volatility_view",
+      "name": "Event Volatility View",
+      "description": "Assess expected volatility around an upcoming event.",
+      "tags": [
+        "options",
+        "volatility",
+        "events"
+      ],
+      "examples": [
+        "Expected vol around AAPL earnings?",
+        "What does options market imply for CPI day?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0052,
+      "price": 0.0072
+    }
+  ]
+}

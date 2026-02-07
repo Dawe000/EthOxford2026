@@ -61,8 +61,21 @@ async function waitForReady() {
   throw new Error('Timed out waiting for wrangler dev to be ready.');
 }
 
-async function testAgentCards() {
-  for (let id = 1; id <= 10; id += 1) {
+async function fetchAgentIds() {
+  const res = await fetch(`${BASE_URL}/`);
+  assert(res.ok, `Root route discovery failed with ${res.status}`);
+  const data = await res.json();
+  assert(Array.isArray(data.routes), 'Root response missing routes array');
+  const ids = data.routes
+    .map((route) => String(route).replace(/^\//, ''))
+    .filter((id) => /^\d+$/.test(id));
+
+  assert(ids.length >= 30, `Expected at least 30 agent routes, found ${ids.length}`);
+  return ids;
+}
+
+async function testAgentCards(agentIds) {
+  for (const id of agentIds) {
     const res = await fetch(`${BASE_URL}/${id}/card`);
     assert(res.ok, `Agent ${id} card request failed with ${res.status}`);
     const card = await res.json();
@@ -92,10 +105,16 @@ async function testVeniceResponse({ requireLocalKey }) {
     );
   }
 
+  const cardRes = await fetch(`${BASE_URL}/1/card`);
+  assert(cardRes.ok, `Agent 1 card lookup failed with ${cardRes.status}`);
+  const card = await cardRes.json();
+  const firstSkillId = card?.skills?.[0]?.id;
+  assert(firstSkillId, 'Agent 1 card missing first skill id for integration test');
+
   const payload = {
     task: {
-      skill: 'security_analysis',
-      input: 'Return JSON with summary containing TEST_OK. Code: function add(a,b){return a+b;}',
+      skill: firstSkillId,
+      input: 'Return JSON where summary contains TEST_OK.',
     },
   };
 
@@ -163,8 +182,9 @@ async function run() {
 
   try {
     await waitForReady();
+    const agentIds = await fetchAgentIds();
     await testHealth();
-    await testAgentCards();
+    await testAgentCards(agentIds);
     if (!SKIP_VENICE) {
       await testVeniceResponse({ requireLocalKey: !REMOTE });
     }

@@ -1,0 +1,74 @@
+{
+  "name": "Onchain Wallet Investigator",
+  "description": "Analyzes wallet behavior and major onchain movements.",
+  "url": "https://agents.example.com/ethoxford/onchain-wallet-investigator",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/onchain-wallet-investigator",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "wallet_activity_summary",
+      "name": "Wallet Activity Summary",
+      "description": "Summarize recent high-level activity for a wallet address.",
+      "tags": [
+        "onchain",
+        "wallet",
+        "analysis"
+      ],
+      "examples": [
+        "Summarize activity for this wallet: 0x123...",
+        "What has this wallet done recently?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0032,
+      "price": 0.0061
+    },
+    {
+      "id": "large_transfer_alerts",
+      "name": "Large Transfer Alerts",
+      "description": "Identify recent large transfers linked to an address or token.",
+      "tags": [
+        "onchain",
+        "transfers",
+        "alerts"
+      ],
+      "examples": [
+        "Find large transfers for USDC in the last day.",
+        "Any whale transfers for this wallet?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0034,
+      "price": 0.0063
+    }
+  ]
+}

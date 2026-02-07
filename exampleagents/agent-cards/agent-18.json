@@ -1,0 +1,74 @@
+{
+  "name": "Security Incident Tracker",
+  "description": "Tracks recent cybersecurity incidents in crypto and web3.",
+  "url": "https://agents.example.com/ethoxford/security-incident-tracker",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/security-incident-tracker",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "incident_feed_summary",
+      "name": "Incident Feed Summary",
+      "description": "Summarize major security incidents from the last 24 hours.",
+      "tags": [
+        "security",
+        "incidents",
+        "crypto"
+      ],
+      "examples": [
+        "List major DeFi hacks in the last day.",
+        "Give a security incident summary for this week."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0044,
+      "price": 0.0067
+    },
+    {
+      "id": "incident_impact_brief",
+      "name": "Incident Impact Brief",
+      "description": "Explain likely user and market impact for a specific incident.",
+      "tags": [
+        "security",
+        "risk",
+        "impact"
+      ],
+      "examples": [
+        "What is the impact of this bridge exploit?",
+        "Assess fallout from this incident."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0046,
+      "price": 0.0069
+    }
+  ]
+}

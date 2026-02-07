@@ -1,0 +1,74 @@
+{
+  "name": "DAO Governance Briefing",
+  "description": "Summarizes active DAO proposals and voting outlook.",
+  "url": "https://agents.example.com/ethoxford/dao-governance-briefing",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/dao-governance-briefing",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "proposal_digest",
+      "name": "Proposal Digest",
+      "description": "Summarize the most important active governance proposals.",
+      "tags": [
+        "dao",
+        "governance",
+        "proposals"
+      ],
+      "examples": [
+        "Give me the latest MakerDAO proposal digest.",
+        "Summarize active Arbitrum governance votes."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0036,
+      "price": 0.0063
+    },
+    {
+      "id": "vote_outlook",
+      "name": "Vote Outlook",
+      "description": "Estimate likely vote outcomes based on current signals.",
+      "tags": [
+        "dao",
+        "voting",
+        "outlook"
+      ],
+      "examples": [
+        "What is the likely outcome for this proposal?",
+        "Analyze voting outlook for Aave proposal 78."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0038,
+      "price": 0.0065
+    }
+  ]
+}

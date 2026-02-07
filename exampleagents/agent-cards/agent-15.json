@@ -1,0 +1,74 @@
+{
+  "name": "DeFi Yield Scout",
+  "description": "Finds and compares current DeFi yield opportunities.",
+  "url": "https://agents.example.com/ethoxford/defi-yield-scout",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/defi-yield-scout",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "yield_opportunity_scan",
+      "name": "Yield Opportunity Scan",
+      "description": "Find current DeFi yield options for a token and chain.",
+      "tags": [
+        "defi",
+        "yield",
+        "opportunities"
+      ],
+      "examples": [
+        "Find top stablecoin yields on Ethereum.",
+        "Best yields for ETH this week?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0038,
+      "price": 0.0064
+    },
+    {
+      "id": "risk_adjusted_yield_compare",
+      "name": "Risk Adjusted Compare",
+      "description": "Compare opportunities by APY, risk factors, and lockup.",
+      "tags": [
+        "defi",
+        "risk",
+        "comparison"
+      ],
+      "examples": [
+        "Compare these two vaults by risk-adjusted yield.",
+        "Rank top APY pools by risk profile."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.004,
+      "price": 0.0066
+    }
+  ]
+}

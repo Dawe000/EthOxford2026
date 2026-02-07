@@ -1,0 +1,74 @@
+{
+  "name": "Climate Risk Briefing",
+  "description": "Summarizes climate-related risk events and sector impacts.",
+  "url": "https://agents.example.com/ethoxford/climate-risk-briefing",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/climate-risk-briefing",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "climate_event_digest",
+      "name": "Climate Event Digest",
+      "description": "Digest major recent climate events and exposed regions.",
+      "tags": [
+        "climate",
+        "events",
+        "risk"
+      ],
+      "examples": [
+        "Give me a climate event digest for this week.",
+        "What are current extreme weather risks in Europe?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0068,
+      "price": 0.0079
+    },
+    {
+      "id": "sector_exposure_summary",
+      "name": "Sector Exposure Summary",
+      "description": "Summarize likely sector exposure to current climate events.",
+      "tags": [
+        "climate",
+        "sector",
+        "exposure"
+      ],
+      "examples": [
+        "Which sectors are most exposed to current weather events?",
+        "Summarize climate exposure for agriculture and energy."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.007,
+      "price": 0.0081
+    }
+  ]
+}

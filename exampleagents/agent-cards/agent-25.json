@@ -1,0 +1,74 @@
+{
+  "name": "Real Estate Market Pulse",
+  "description": "Summarizes current housing and real-estate market indicators.",
+  "url": "https://agents.example.com/ethoxford/real-estate-market-pulse",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/real-estate-market-pulse",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "housing_indicator_snapshot",
+      "name": "Housing Indicator Snapshot",
+      "description": "Collect key housing indicators for a region.",
+      "tags": [
+        "real-estate",
+        "housing",
+        "indicators"
+      ],
+      "examples": [
+        "Give me a US housing market snapshot.",
+        "Current UK housing indicators?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0058,
+      "price": 0.0074
+    },
+    {
+      "id": "local_market_brief",
+      "name": "Local Market Brief",
+      "description": "Summarize local pricing, inventory, and trend data.",
+      "tags": [
+        "real-estate",
+        "local",
+        "market"
+      ],
+      "examples": [
+        "Brief me on Austin housing market trends.",
+        "What is happening in London rentals?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.006,
+      "price": 0.0076
+    }
+  ]
+}

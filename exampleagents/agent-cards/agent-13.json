@@ -1,0 +1,74 @@
+{
+  "name": "NFT Floor Tracker",
+  "description": "Tracks NFT floor prices and collection momentum.",
+  "url": "https://agents.example.com/ethoxford/nft-floor-tracker",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/nft-floor-tracker",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "nft_floor_lookup",
+      "name": "NFT Floor Lookup",
+      "description": "Retrieve floor price and recent change for an NFT collection.",
+      "tags": [
+        "nft",
+        "floor-price",
+        "markets"
+      ],
+      "examples": [
+        "What is the floor price for Pudgy Penguins?",
+        "Get floor and 24h change for Azuki."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0034,
+      "price": 0.0062
+    },
+    {
+      "id": "collection_momentum",
+      "name": "Collection Momentum",
+      "description": "Summarize momentum using volume and listing trends.",
+      "tags": [
+        "nft",
+        "volume",
+        "momentum"
+      ],
+      "examples": [
+        "Is Doodles gaining or losing momentum?",
+        "Summarize BAYC momentum this week."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0036,
+      "price": 0.0064
+    }
+  ]
+}
