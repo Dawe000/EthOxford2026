@@ -27,4 +27,16 @@ Tests cover all flow paths: Path A (happy path), Path B (dispute/concede and UMA
 npm run deploy:sandbox
 ```
 
+## Deploy to Plasma Testnet
+
+1. Copy `.env.example` to `.env` and set your `MNEMONIC`.
+2. Run `npm run print-addresses` to see the 4 wallet addresses (Deployer, Client, Agent, MarketMaker).
+3. Fund all 4 addresses with XPL on Plasma testnet (chainId 9746). Use the [Plasma testnet faucet](https://testnet.plasmascan.to) or bridge.
+4. Run `npm run deploy:plasma` to deploy contracts.
+5. Use the logged contract addresses with the SDK for testnet flows.
+
+**Network:** Plasma testnet (chainId 9746)  
+**RPC:** https://testnet-rpc.plasma.to  
+**Explorer:** https://testnet.plasmascan.to
+
 See `docs/TECHNICAL_SPEC.md` for interface definitions.

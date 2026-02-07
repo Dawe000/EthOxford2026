@@ -6,7 +6,9 @@
     "compile": "hardhat compile",
     "test": "hardhat test",
     "test:verbose": "VERBOSE=1 hardhat test",
-    "deploy:sandbox": "hardhat run script/deploy-sandbox.ts"
+    "deploy:sandbox": "hardhat run script/deploy-sandbox.ts",
+    "deploy:plasma": "hardhat run script/deploy-plasma-testnet.ts --network plasma-testnet",
+    "print-addresses": "hardhat run script/print-testnet-addresses.ts"
   },
   "devDependencies": {
     "@erc8001/agent-task-sdk": "file:../sdk",
