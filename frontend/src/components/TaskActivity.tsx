@@ -6,6 +6,8 @@ import { useAccount } from 'wagmi';
 import { useAgentSDK } from '@/hooks/useAgentSDK';
 import { useEscrowTiming } from '@/hooks/useEscrowTiming';
 import { TaskContestationActions } from '@/components/TaskContestationActions';
+import { notifyErc8001PaymentDeposited } from '@/lib/api/marketMaker';
+import { getTaskDispatchMeta } from '@/lib/taskMeta';
 import {
   Dialog,
   DialogContent,
@@ -61,6 +63,7 @@ export function TaskActivity({ taskId }: { taskId: string }) {
   const [loading, setLoading] = useState(true);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [isDepositing, setIsDepositing] = useState(false);
+  const [isNotifyingPayment, setIsNotifyingPayment] = useState(false);
   const [resultBody, setResultBody] = useState<unknown>(null);
   const [resultError, setResultError] = useState<string | null>(null);
 
@@ -146,6 +149,10 @@ export function TaskActivity({ taskId }: { taskId: string }) {
     task.status === TaskStatus.Accepted &&
     paymentDeposited === false &&
     isTaskClient;
+  const canNotifyHere =
+    task.status === TaskStatus.Accepted &&
+    paymentDeposited === true &&
+    isTaskClient;
 
   const depositDisabledReason = !isTaskClient
     ? 'Connect with the task client wallet to deposit.'
@@ -154,6 +161,36 @@ export function TaskActivity({ taskId }: { taskId: string }) {
       : paymentDeposited
         ? 'Payment already deposited.'
         : 'Checking payment status...';
+  const notifyDisabledReason = !isTaskClient
+    ? 'Connect with the task client wallet to notify.'
+    : task.status !== TaskStatus.Accepted
+      ? 'Notify is only available while task is Accepted.'
+      : paymentDeposited
+        ? null
+        : 'Deposit payment before notifying the agent.';
+
+  const handleNotifyPaymentDeposited = async () => {
+    const dispatchMeta = getTaskDispatchMeta(task.id.toString());
+    if (!dispatchMeta?.agentId) {
+      toast.warning('Payment deposited, but agent notification unavailable for this historical task.');
+      return;
+    }
+
+    setIsNotifyingPayment(true);
+    const notifyToastId = toast.loading('Notifying agent that payment was deposited...');
+    try {
+      await notifyErc8001PaymentDeposited({
+        agentId: dispatchMeta.agentId,
+        onchainTaskId: task.id.toString(),
+      });
+      toast.success('Agent notified. Task execution can resume.', { id: notifyToastId });
+    } catch (notifyError: unknown) {
+      const notifyMessage = notifyError instanceof Error ? notifyError.message : 'Unknown error';
+      toast.error(`Payment deposited, but notify failed: ${notifyMessage}`, { id: notifyToastId });
+    } finally {
+      setIsNotifyingPayment(false);
+    }
+  };
 
   const handleDepositPayment = async () => {
     if (!sdk) {
@@ -166,8 +203,9 @@ export function TaskActivity({ taskId }: { taskId: string }) {
     const toastId = toast.loading(`Depositing payment for task ${task.id.toString()}...`);
     try {
       await sdk.client.depositPayment(task.id);
-      toast.success('Payment deposited. Agent can now execute and assert completion.', { id: toastId });
+      toast.success('Payment deposited on-chain.', { id: toastId });
       await fetchTask();
+      await handleNotifyPaymentDeposited();
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       toast.error(`Deposit failed: ${message}`, { id: toastId });
@@ -244,6 +282,16 @@ export function TaskActivity({ taskId }: { taskId: string }) {
               </button>
               {!canDepositHere && depositDisabledReason && (
                 <p className="text-[10px] text-emerald-200/80">{depositDisabledReason}</p>
+              )}
+              <button
+                onClick={handleNotifyPaymentDeposited}
+                disabled={!canNotifyHere || isNotifyingPayment}
+                className="w-full rounded-lg bg-cyan-400 px-3 py-2 text-xs font-bold text-black transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isNotifyingPayment ? 'Notifying Agent...' : 'Notify Agent Payment Deposited'}
+              </button>
+              {!canNotifyHere && notifyDisabledReason && (
+                <p className="text-[10px] text-emerald-200/80">{notifyDisabledReason}</p>
               )}
             </div>
 

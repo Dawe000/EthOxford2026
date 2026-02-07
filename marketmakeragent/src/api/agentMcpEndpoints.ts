@@ -1,4 +1,9 @@
-import { AgentMcpClient, AgentTaskRequest, Erc8001DispatchRequest } from '../services/agentMcp';
+import {
+	AgentMcpClient,
+	AgentTaskRequest,
+	Erc8001DispatchRequest,
+	Erc8001PaymentDepositedRequest,
+} from '../services/agentMcp';
 
 const corsHeaders = {
 	'Access-Control-Allow-Origin': '*',
@@ -128,6 +133,43 @@ export async function handleAgentMcpRoutes(
 		} catch (error) {
 			return new Response(
 				JSON.stringify({ error: 'ERC8001 dispatch failed', details: (error as Error).message }),
+				{
+					status: 500,
+					headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+				}
+			);
+		}
+	}
+
+	const erc8001PaymentMatch = pathname.match(/^\/api\/agents\/(\d+)\/erc8001\/payment-deposited$/);
+	if (erc8001PaymentMatch && request.method === 'POST') {
+		const agentId = erc8001PaymentMatch[1];
+		try {
+			const body = (await request.json()) as Partial<Erc8001PaymentDepositedRequest>;
+			if (!body.onchainTaskId) {
+				return new Response(
+					JSON.stringify({
+						error: 'Invalid payment notification payload',
+						details: 'onchainTaskId is required',
+					}),
+					{
+						status: 400,
+						headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+					}
+				);
+			}
+
+			const result = await mcpClient.notifyErc8001PaymentDeposited(agentId, {
+				onchainTaskId: String(body.onchainTaskId),
+			});
+
+			return new Response(JSON.stringify(result.body), {
+				status: result.status,
+				headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+			});
+		} catch (error) {
+			return new Response(
+				JSON.stringify({ error: 'ERC8001 payment notification failed', details: (error as Error).message }),
 				{
 					status: 500,
 					headers: { ...corsHeaders, 'Content-Type': 'application/json' },

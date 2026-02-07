@@ -20,11 +20,12 @@ The implemented sequence is:
 2. Frontend dispatches selected agent via marketmaker endpoint.
 3. Marketmaker forwards ERC8001 metadata to ExampleAgents worker.
 4. Agent worker accepts on-chain task (`acceptTask`) with configured stake.
-5. Agent worker waits for client payment deposit (`paymentDeposited == true`).
+5. Agent worker accepts and then pauses awaiting a client payment alert.
 6. Client deposits payment manually from frontend (`depositPayment`).
-7. Agent executes task off-chain and stores result in D1.
-8. Agent asserts completion on-chain (`assertCompletion`) with `resultURI` pointing to worker task endpoint.
-9. Frontend polls chain task state and fetches result payload from on-chain `resultURI`.
+7. Frontend alerts selected agent with `onchainTaskId`.
+8. Agent verifies `paymentDeposited == true`, executes off-chain task, and stores result in D1.
+9. Agent asserts completion on-chain (`assertCompletion`) with `resultURI` pointing to worker task endpoint.
+10. Frontend polls chain task state and fetches result payload from on-chain `resultURI`.
 
 ## 3) What changed by component
 
@@ -59,6 +60,8 @@ Files:
 Changes:
 - Added new API endpoint:
   - `POST /api/agents/:agentId/erc8001/dispatch`
+- Added payment alert proxy endpoint:
+  - `POST /api/agents/:agentId/erc8001/payment-deposited`
 - Endpoint validation requires:
   - `onchainTaskId`
   - `input`
@@ -70,6 +73,7 @@ Changes:
   - `/{agentId}/tasks?forceAsync=true`
 - Response normalized to:
   - `{ agentId, runId, status: "accepted", onchainTaskId, statusUrl }`
+- Payment notify route now forwards downstream statuses (including `409`) without collapsing to `500`.
 - Added tests proving route proxy/shape behavior.
 
 How it enables integration:
@@ -87,11 +91,13 @@ Changes:
 - For ERC8001 tasks, worker forces async processing and queue execution.
 - Queue processor now performs on-chain agent lifecycle:
   1. `acceptTask(taskId, stakeAmountWei)` if task is still `Created`.
-  2. Wait loop on `paymentDeposited(taskId)` with timeout + poll interval.
-  3. Execute task via existing Venice pipeline.
-  4. Persist result in D1.
-  5. Build absolute `resultURI` (`/{agentId}/tasks/{runId}` under public base URL).
-  6. `assertCompletion(taskId, resultPayload, resultURI)`.
+  2. If unpaid, persists `awaitingPaymentAlert=true` and exits without failure.
+  3. Resumes only when client calls `POST /{agentId}/erc8001/payment-deposited`.
+  4. Verifies on-chain `paymentDeposited(taskId)` on alert (returns `409` if false).
+  5. Execute task via existing Venice pipeline.
+  6. Persist result in D1.
+  7. Build absolute `resultURI` (`/{agentId}/tasks/{runId}` under public base URL).
+  8. `assertCompletion(taskId, resultPayload, resultURI)`.
 - Added signer bootstrap for on-chain agent transactions:
   - Uses `AGENT_EVM_PRIVATE_KEY` + RPC/escrow env config.
 - Added metadata persistence for observability in `response_meta_json`.
@@ -102,8 +108,6 @@ Worker env/config additions:
 - `ERC8001_RPC_URL`
 - `ERC8001_ESCROW_ADDRESS`
 - `ERC8001_PUBLIC_BASE_URL`
-- `ERC8001_PAYMENT_WAIT_MS`
-- `ERC8001_PAYMENT_POLL_MS`
 
 How it enables integration:
 - The selected off-chain agent route now performs real on-chain acceptance and completion assertions tied to the same task id the frontend created.
@@ -119,6 +123,8 @@ Files:
 Changes:
 - Added marketmaker dispatch client API:
   - `dispatchErc8001Task(...)`
+- Added payment notify client API:
+  - `notifyErc8001PaymentDeposited(...)`
 - `Request Task` flow updated to:
   1. create on-chain task
   2. dispatch selected agent through marketmaker
@@ -128,6 +134,8 @@ Changes:
   - reads full task + `paymentDeposited`
   - tracks status progression
   - fetches result payload from on-chain `resultURI` when asserted
+- Added task dispatch metadata storage:
+  - `taskId -> { agentId, runId }` for later payment notification and retries.
 - SDK hook configured with escrow address, chain, marketmaker URL, and deployment block.
 
 How it enables integration:
@@ -204,6 +212,29 @@ Response:
 }
 ```
 
+### Frontend -> Marketmaker (payment alert)
+
+`POST /api/agents/:agentId/erc8001/payment-deposited`
+
+Request:
+```json
+{
+  "onchainTaskId": "123"
+}
+```
+
+Success response:
+```json
+{
+  "agentId": "1",
+  "onchainTaskId": "123",
+  "status": "queued"
+}
+```
+
+Early notify response:
+- HTTP `409` with deterministic `payment_not_deposited` error payload.
+
 ### Marketmaker -> ExampleAgents
 
 Forwarded payload shape:
@@ -227,7 +258,7 @@ Forwarded payload shape:
 - The worker initializes an `AgentSDK` using a real EVM signer derived from `AGENT_EVM_PRIVATE_KEY`.
 - For each ERC8001-dispatched task:
   - On-chain acceptance is submitted by that signer.
-  - Deposit status is polled directly on the escrow contract.
+  - Deposit status is checked on demand when client calls payment alert endpoint.
   - Completion is asserted on-chain by the same signer with signed result hash + `resultURI`.
 - Frontend independently polls escrow task state to avoid trusting worker-only state.
 - Result retrieval is decoupled from chain writes:

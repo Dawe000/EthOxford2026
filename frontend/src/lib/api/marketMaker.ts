@@ -45,6 +45,11 @@ export interface Erc8001DispatchResponse {
   statusUrl?: string;
 }
 
+export interface Erc8001PaymentDepositedRequest {
+  agentId: string;
+  onchainTaskId: string;
+}
+
 export async function dispatchErc8001Task(
   request: Erc8001DispatchRequest
 ): Promise<Erc8001DispatchResponse> {
@@ -66,4 +71,37 @@ export async function dispatchErc8001Task(
     throw new Error(`Failed to dispatch task: ${res.status} ${text}`);
   }
   return res.json();
+}
+
+export async function notifyErc8001PaymentDeposited(
+  request: Erc8001PaymentDepositedRequest
+): Promise<unknown> {
+  const res = await fetch(
+    `${MARKET_MAKER_URL}/agents/${request.agentId}/erc8001/payment-deposited`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        onchainTaskId: request.onchainTaskId,
+      }),
+    }
+  );
+
+  const text = await res.text();
+  let body: unknown = {};
+  try {
+    body = text ? JSON.parse(text) : {};
+  } catch {
+    body = text;
+  }
+
+  if (!res.ok) {
+    const errorMessage =
+      typeof body === 'object' && body !== null && 'details' in body
+        ? String((body as { details?: unknown }).details)
+        : text || `HTTP ${res.status}`;
+    throw new Error(`Payment notification failed (${res.status}): ${errorMessage}`);
+  }
+
+  return body;
 }

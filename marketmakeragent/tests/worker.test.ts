@@ -304,3 +304,81 @@ test('POST /api/agents/:id/erc8001/dispatch proxies task to agent worker', async
 		restoreFetch();
 	}
 });
+
+test('POST /api/agents/:id/erc8001/payment-deposited proxies notify to agent worker', async () => {
+	const restoreFetch = installFetchMock(async (url, init) => {
+		const asString = url.toString();
+		if (asString === 'https://agents.local/1/erc8001/payment-deposited') {
+			assert.equal(init?.method, 'POST');
+			const payload = JSON.parse((init?.body as string) || '{}') as { onchainTaskId?: string };
+			assert.equal(payload.onchainTaskId, '42');
+			return jsonResponse({
+				agentId: '1',
+				onchainTaskId: '42',
+				status: 'queued',
+			}, 202);
+		}
+		return new Response(`No mock configured for ${asString}`, { status: 404 });
+	});
+
+	try {
+		const response = await worker.fetch(
+			new Request('http://localhost/api/agents/1/erc8001/payment-deposited', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ onchainTaskId: '42' }),
+			}),
+			createEnv(),
+			executionContext
+		);
+
+		assert.equal(response.status, 202);
+		const payload = (await response.json()) as {
+			agentId: string;
+			onchainTaskId: string;
+			status: string;
+		};
+		assert.equal(payload.agentId, '1');
+		assert.equal(payload.onchainTaskId, '42');
+		assert.equal(payload.status, 'queued');
+	} finally {
+		restoreFetch();
+	}
+});
+
+test('POST /api/agents/:id/erc8001/payment-deposited preserves downstream 409', async () => {
+	const restoreFetch = installFetchMock(async (url, init) => {
+		const asString = url.toString();
+		if (asString === 'https://agents.local/1/erc8001/payment-deposited') {
+			assert.equal(init?.method, 'POST');
+			return jsonResponse(
+				{
+					error: 'payment_not_deposited',
+					details: 'On-chain paymentDeposited is false for this task.',
+					onchainTaskId: '42',
+					agentId: '1',
+				},
+				409
+			);
+		}
+		return new Response(`No mock configured for ${asString}`, { status: 404 });
+	});
+
+	try {
+		const response = await worker.fetch(
+			new Request('http://localhost/api/agents/1/erc8001/payment-deposited', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ onchainTaskId: '42' }),
+			}),
+			createEnv(),
+			executionContext
+		);
+
+		assert.equal(response.status, 409);
+		const payload = (await response.json()) as { error: string };
+		assert.equal(payload.error, 'payment_not_deposited');
+	} finally {
+		restoreFetch();
+	}
+});

@@ -21,6 +21,15 @@ export interface Erc8001DispatchResponse {
 	statusUrl?: string;
 }
 
+export interface Erc8001PaymentDepositedRequest {
+	onchainTaskId: string;
+}
+
+export interface AgentPassthroughResponse {
+	status: number;
+	body: unknown;
+}
+
 export interface AgentTaskResult {
 	id: string;
 	status: string;
@@ -115,6 +124,32 @@ export class AgentMcpClient {
 			status: 'accepted',
 			onchainTaskId: request.onchainTaskId,
 			statusUrl: data.statusUrl,
+		};
+	}
+
+	async notifyErc8001PaymentDeposited(
+		agentId: string,
+		request: Erc8001PaymentDepositedRequest
+	): Promise<AgentPassthroughResponse> {
+		const response = await fetch(`${this.baseUrl}/${agentId}/erc8001/payment-deposited`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ onchainTaskId: request.onchainTaskId }),
+		});
+
+		const text = await response.text();
+		let body: unknown;
+		try {
+			body = text ? JSON.parse(text) : {};
+		} catch {
+			body = { raw: text };
+		}
+
+		return {
+			status: response.status,
+			body,
 		};
 	}
 

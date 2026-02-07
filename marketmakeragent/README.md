@@ -90,21 +90,26 @@ Dispatch an ERC8001-linked task to a selected agent route (testing flow).
 }
 ```
 
-**Response:**
+### `POST /api/agents/:agentId/erc8001/payment-deposited`
+Notify selected agent that client payment was deposited on-chain.
+
+**Request:**
 ```json
 {
-  "query": "Find yield farming opportunities on Base chain",
-  "matchStrategy": "semantic-pinecone-cosine-similarity",
-  "agents": [
-    {
-      "agent": { /* AgentCapabilityCard */ },
-      "score": 0.89,
-      "trustScore": 0.85,
-      "reason": "Excellent capability match with strong trust rating"
-    }
-  ]
+  "onchainTaskId": "123"
 }
 ```
+
+**Response (queued):**
+```json
+{
+  "agentId": "1",
+  "onchainTaskId": "123",
+  "status": "queued"
+}
+```
+
+If the agent reports payment is not yet visible on-chain, the endpoint returns HTTP `409` and forwards the agent's error payload.
 
 ## Development
 

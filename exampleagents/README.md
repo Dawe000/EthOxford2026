@@ -61,6 +61,7 @@ Update `exampleagents/wrangler.toml` with your real D1 `database_id` before depl
 - Agent card: `/{id}/card` or `/{id}/.well-known/agent-card.json`
 - Task creation: `POST /{id}/tasks`
 - Task status/result: `GET /{id}/tasks/{taskId}`
+- ERC8001 payment alert: `POST /{id}/erc8001/payment-deposited`
 - Telemetry: `/{id}/telemetry`
 - A2A task creation: `POST /{id}/a2a/tasks`
 - A2A task status: `GET /{id}/a2a/tasks/{taskId}/status`
@@ -75,10 +76,13 @@ Each agent calls Venice AI via `https://api.venice.ai/api/v1/chat/completions` a
 For ERC8001 dispatches (`POST /{id}/tasks` payload containing `erc8001`), the worker now:
 
 1. Calls on-chain `acceptTask(taskId, stake)` with the agent signer.
-2. Waits until `paymentDeposited(taskId) == true`.
-3. Executes the task.
-4. Persists the result in D1.
-5. Calls `assertCompletion(taskId, resultHash, signature, resultURI)` where `resultURI` points to `/{id}/tasks/{runId}`.
+2. Pauses execution until client sends `POST /{id}/erc8001/payment-deposited` with `onchainTaskId`.
+3. On alert, verifies `paymentDeposited(taskId) == true`.
+4. Executes the task.
+5. Persists the result in D1.
+6. Calls `assertCompletion(taskId, resultPayload, resultURI)` where `resultURI` points to `/{id}/tasks/{runId}`.
+
+If payment is not yet visible at alert time, the endpoint returns HTTP `409`.
 
 Required worker config:
 
@@ -90,8 +94,7 @@ Required worker config:
 
 Optional:
 
-- `ERC8001_PAYMENT_WAIT_MS` (default 600000)
-- `ERC8001_PAYMENT_POLL_MS` (default 5000)
+- none required for payment waiting (polling removed in favor of client alert)
 
 ## Pinecone Vector Sync
 

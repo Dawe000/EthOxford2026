@@ -21,7 +21,8 @@ import Link from 'next/link';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAgentSDK } from '@/hooks/useAgentSDK';
 import { MOCK_TOKEN_ADDRESS } from '@/config/constants';
-import { dispatchErc8001Task } from '@/lib/api/marketMaker';
+import { dispatchErc8001Task, notifyErc8001PaymentDeposited } from '@/lib/api/marketMaker';
+import { getTaskDispatchMeta, upsertTaskDispatchMeta } from '@/lib/taskMeta';
 import { formatEther, parseEther } from 'ethers';
 import { useAccount, useReadContract } from 'wagmi';
 import { TaskStatus, type Task } from '@sdk/types';
@@ -53,6 +54,7 @@ export default function Home() {
   const [deadline, setDeadline] = useState(Math.floor(Date.now() / 1000) + 3600);
   const [isCreating, setIsCreating] = useState(false);
   const [isDepositing, setIsDepositing] = useState(false);
+  const [isNotifyingPayment, setIsNotifyingPayment] = useState(false);
 
   const [activeTaskId, setActiveTaskId] = useState<bigint | null>(null);
   const [activeAgentRunId, setActiveAgentRunId] = useState<string | null>(null);
@@ -195,6 +197,10 @@ export default function Home() {
       if (typeof window !== 'undefined') {
         const savedTasks = JSON.parse(localStorage.getItem('r8004_tasks') || '[]');
         localStorage.setItem('r8004_tasks', JSON.stringify([...savedTasks, taskId.toString()]));
+        upsertTaskDispatchMeta(taskId.toString(), {
+          agentId: dispatchResult.agentId,
+          runId: dispatchResult.runId,
+        });
       }
 
       toast.success(
@@ -209,6 +215,32 @@ export default function Home() {
     }
   };
 
+  const handleNotifyPaymentDeposited = useCallback(
+    async (taskId: bigint) => {
+      const dispatchMeta = getTaskDispatchMeta(taskId.toString());
+      if (!dispatchMeta?.agentId) {
+        toast.warning('Payment deposited, but agent notification metadata is missing for this task.');
+        return;
+      }
+
+      setIsNotifyingPayment(true);
+      const notifyToastId = toast.loading('Notifying agent that payment was deposited...');
+      try {
+        await notifyErc8001PaymentDeposited({
+          agentId: dispatchMeta.agentId,
+          onchainTaskId: taskId.toString(),
+        });
+        toast.success('Agent notified. Task execution can resume.', { id: notifyToastId });
+      } catch (notifyErr: unknown) {
+        const notifyMessage = notifyErr instanceof Error ? notifyErr.message : 'Unknown error';
+        toast.error(`Payment deposited, but notify failed: ${notifyMessage}`, { id: notifyToastId });
+      } finally {
+        setIsNotifyingPayment(false);
+      }
+    },
+    []
+  );
+
   const handleDepositPayment = async () => {
     if (!sdk || activeTaskId === null) return;
 
@@ -219,7 +251,9 @@ export default function Home() {
       await sdk.client.depositPayment(activeTaskId);
       setPaymentDeposited(true);
       await refreshActiveTask();
-      toast.success('Payment deposited. Agent can now execute and assert completion.', { id: toastId });
+      toast.success('Payment deposited on-chain.', { id: toastId });
+
+      await handleNotifyPaymentDeposited(activeTaskId);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       toast.error(`Deposit failed: ${message}`, { id: toastId });
@@ -422,6 +456,16 @@ export default function Home() {
                   className="w-full py-3 font-bold text-sm rounded-2xl transition-all bg-emerald-500 hover:bg-emerald-400 text-black"
                 >
                   {isDepositing ? 'Depositing Payment...' : 'Deposit Payment (Manual Step)'}
+                </button>
+              )}
+
+              {activeTaskId !== null && activeTaskStatus === TaskStatus.Accepted && paymentDeposited && (
+                <button
+                  onClick={() => void handleNotifyPaymentDeposited(activeTaskId)}
+                  disabled={isNotifyingPayment}
+                  className="w-full py-3 font-bold text-sm rounded-2xl transition-all bg-cyan-400 hover:bg-cyan-300 text-black"
+                >
+                  {isNotifyingPayment ? 'Notifying Agent...' : 'Notify Agent Payment Deposited'}
                 </button>
               )}
 

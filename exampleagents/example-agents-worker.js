@@ -53,11 +53,10 @@ const MAX_SYNC_TIMEOUT_MS = 60000;
 const MIN_SYNC_TIMEOUT_MS = 1000;
 const TASK_RETENTION_DAYS = 7;
 const CLEANUP_BATCH_SIZE = 200;
+const PENDING_TASK_LOOKUP_LIMIT = 500;
 const DEFAULT_ERC8001_CHAIN_ID = 9746;
 const DEFAULT_ERC8001_RPC_URL = 'https://testnet-rpc.plasma.to';
 const DEFAULT_ERC8001_ESCROW_ADDRESS = '0x2E24A0a838Fa71765A00CB9528B6C378D8437D53';
-const DEFAULT_PAYMENT_WAIT_MS = 10 * 60 * 1000;
-const DEFAULT_PAYMENT_POLL_MS = 5000;
 
 export default {
   async fetch(request, env, ctx) {
@@ -109,6 +108,7 @@ export default {
             `/${agentId}/card`,
             `/${agentId}/tasks`,
             `/${agentId}/tasks/{taskId}`,
+            `/${agentId}/erc8001/payment-deposited`,
             `/${agentId}/telemetry`,
             `/${agentId}/a2a/tasks`,
             `/${agentId}/a2a/tasks/{taskId}/status`,
@@ -150,8 +150,16 @@ export default {
       return handleTasks(request, env, ctx, corsHeaders, agent, segments, url);
     }
 
+    if (segments[1] === 'erc8001') {
+      return handleErc8001Routes(request, env, corsHeaders, agent, segments);
+    }
+
     if (segments[1] === 'a2a' && segments[2] === 'tasks') {
       return handleA2ATasks(request, env, ctx, corsHeaders, agent, segments, url);
+    }
+
+    if (segments[1] === 'a2a' && segments[2] === 'auction') {
+      return handleA2AAuction(request, corsHeaders, agent, segments);
     }
 
     return jsonResponse(
@@ -294,6 +302,244 @@ async function handleA2ATasks(request, env, ctx, corsHeaders, agent, segments, u
 
   return jsonResponse(
     { error: 'Unsupported /a2a/tasks route.' },
+    404,
+    corsHeaders
+  );
+}
+
+async function handleA2AAuction(request, corsHeaders, agent, segments) {
+  if (request.method === 'POST' && segments.length === 4 && segments[3] === 'join') {
+    try {
+      const body = await parseRequestBody(request);
+      if (!body?.auctionId) {
+        return jsonResponse(
+          {
+            error: 'Missing required field: auctionId',
+          },
+          400,
+          corsHeaders
+        );
+      }
+
+      const pricing = getAuctionPricingForAgent(agent.id);
+      return jsonResponse(
+        {
+          agentId: agent.id,
+          ask: pricing.defaultAsk,
+          minAmount: pricing.minAmount,
+          stakeAmount: pricing.stakeAmount,
+          taskDeadline: body?.taskDeadline,
+        },
+        200,
+        corsHeaders
+      );
+    } catch (error) {
+      return jsonResponse(
+        { error: error.message || 'Failed to join auction.' },
+        500,
+        corsHeaders
+      );
+    }
+  }
+
+  if (
+    request.method === 'POST' &&
+    segments.length === 5 &&
+    segments[4] === 'bid'
+  ) {
+    try {
+      const body = await parseRequestBody(request);
+      const pricing = getAuctionPricingForAgent(agent.id);
+      const nextAsk = resolveAuctionBidAsk(pricing.defaultAsk, pricing.minAmount, body?.marketState);
+
+      return jsonResponse(
+        {
+          agentId: agent.id,
+          ask: nextAsk,
+          minAmount: pricing.minAmount,
+          stakeAmount: pricing.stakeAmount,
+        },
+        200,
+        corsHeaders
+      );
+    } catch (error) {
+      return jsonResponse(
+        { error: error.message || 'Failed to produce auction bid.' },
+        500,
+        corsHeaders
+      );
+    }
+  }
+
+  return jsonResponse(
+    { error: 'Unsupported /a2a/auction route.' },
+    404,
+    corsHeaders
+  );
+}
+
+function getAuctionPricingForAgent(agentId) {
+  const numericId = Number.parseInt(String(agentId), 10);
+  const normalizedId = Number.isFinite(numericId) && numericId > 0 ? numericId : 1;
+
+  return {
+    defaultAsk: String(150 + normalizedId * 10),
+    minAmount: String(100 + normalizedId * 10),
+    stakeAmount: '50',
+  };
+}
+
+function resolveAuctionBidAsk(defaultAsk, minAmount, marketState) {
+  const min = BigInt(minAmount);
+  const competingPrices = Array.isArray(marketState?.competingPrices)
+    ? marketState.competingPrices
+    : [];
+
+  let bestCompetingPrice = null;
+  for (const entry of competingPrices) {
+    if (entry?.price == null) continue;
+    try {
+      const price = BigInt(String(entry.price));
+      if (bestCompetingPrice === null || price < bestCompetingPrice) {
+        bestCompetingPrice = price;
+      }
+    } catch {
+      // Ignore malformed prices and continue with best-effort undercut.
+    }
+  }
+
+  if (bestCompetingPrice === null) {
+    return defaultAsk;
+  }
+
+  const undercut = bestCompetingPrice > 0n ? bestCompetingPrice - 1n : 0n;
+  const boundedAsk = undercut < min ? min : undercut;
+  return String(boundedAsk);
+}
+
+async function handleErc8001Routes(request, env, corsHeaders, agent, segments) {
+  if (
+    request.method === 'POST' &&
+    segments.length === 3 &&
+    segments[2] === 'payment-deposited'
+  ) {
+    try {
+      const body = await parseRequestBody(request);
+      const onchainTaskId = body?.onchainTaskId ? String(body.onchainTaskId) : '';
+      if (!onchainTaskId) {
+        return jsonResponse(
+          {
+            error: 'Invalid payload',
+            details: 'onchainTaskId is required',
+          },
+          400,
+          corsHeaders
+        );
+      }
+
+      const task = await findLatestTaskByOnchainTaskId(env, agent.id, onchainTaskId);
+      if (!task) {
+        return jsonResponse(
+          {
+            error: 'No matching task run found',
+            onchainTaskId,
+            agentId: agent.id,
+          },
+          404,
+          corsHeaders
+        );
+      }
+
+      if (task.status === TASK_STATUS.COMPLETED || task.status === TASK_STATUS.FAILED) {
+        return jsonResponse(
+          {
+            agentId: agent.id,
+            onchainTaskId,
+            taskId: task.id,
+            status: 'no-op',
+            taskStatus: task.status,
+          },
+          200,
+          corsHeaders
+        );
+      }
+
+      const existingMeta = safeJsonParse(task.response_meta_json) || {};
+      const existingErc8001Meta =
+        existingMeta && typeof existingMeta === 'object' ? existingMeta.erc8001 || {} : {};
+      const awaitingPaymentAlert = Boolean(existingErc8001Meta.awaitingPaymentAlert);
+
+      // Idempotency guard: if the run is no longer waiting for payment alert, treat repeat
+      // notifications as no-ops so we do not enqueue duplicate executions.
+      if (!awaitingPaymentAlert) {
+        return jsonResponse(
+          {
+            agentId: agent.id,
+            onchainTaskId,
+            taskId: task.id,
+            status: 'no-op',
+            details: 'Task is not awaiting payment alert.',
+            taskStatus: task.status,
+          },
+          200,
+          corsHeaders
+        );
+      }
+
+      const deposited = await isPaymentDeposited(env, onchainTaskId);
+      if (!deposited) {
+        return jsonResponse(
+          {
+            error: 'payment_not_deposited',
+            details: 'On-chain paymentDeposited is false for this task.',
+            onchainTaskId,
+            agentId: agent.id,
+          },
+          409,
+          corsHeaders
+        );
+      }
+
+      await updateTaskResponseMeta(env, task.id, {
+        ...existingMeta,
+        erc8001: {
+          ...existingErc8001Meta,
+          awaitingPaymentAlert: false,
+          resumeQueuedAt: nowIso(),
+          lastResumeReason: 'payment-deposited-alert',
+        },
+      });
+
+      await enqueueTaskExecution(env, {
+        taskId: task.id,
+        agentId: task.agent_id,
+        channel: task.channel,
+        forceFailure: false,
+        resumeReason: 'payment-deposited-alert',
+        onchainTaskId,
+      });
+
+      return jsonResponse(
+        {
+          agentId: agent.id,
+          onchainTaskId,
+          taskId: task.id,
+          status: 'queued',
+        },
+        202,
+        corsHeaders
+      );
+    } catch (error) {
+      return jsonResponse(
+        { error: error.message || 'Failed to process payment alert.' },
+        500,
+        corsHeaders
+      );
+    }
+  }
+
+  return jsonResponse(
+    { error: 'Unsupported /erc8001 route.' },
     404,
     corsHeaders
   );
@@ -724,7 +970,28 @@ async function processQueuedTaskMessage(rawMessageBody, env) {
     const erc8001Request = parseErc8001Request(body);
     let erc8001Meta = null;
     if (erc8001Request) {
-      erc8001Meta = await acceptAndWaitForPaymentDeposit(env, task, erc8001Request);
+      erc8001Meta = await acceptTaskIfNeeded(env, task, erc8001Request);
+      const deposited = await isPaymentDeposited(env, erc8001Request.taskId);
+      if (!deposited) {
+        const existingMeta = safeJsonParse(task.response_meta_json) || {};
+        await updateTaskResponseMeta(env, task.id, {
+          ...existingMeta,
+          erc8001: {
+            ...(existingMeta.erc8001 || {}),
+            ...erc8001Meta,
+            awaitingPaymentAlert: true,
+            waitingSince: nowIso(),
+            lastResumeReason: payload.resumeReason || null,
+          },
+        });
+        return;
+      }
+      erc8001Meta = {
+        ...erc8001Meta,
+        paymentObservedAt: nowIso(),
+        awaitingPaymentAlert: false,
+        resumedBy: payload.resumeReason || 'initial-queue-run',
+      };
     }
 
     const result = await processAgentTask(agent, body, task.input_text, env, {
@@ -767,6 +1034,32 @@ async function enqueueTaskExecution(env, payload) {
     throw new Error('Missing TASK_EXEC_QUEUE binding in environment.');
   }
   await env.TASK_EXEC_QUEUE.send(payload);
+}
+
+async function findLatestTaskByOnchainTaskId(env, agentId, onchainTaskId) {
+  const db = requireDb(env);
+  const rows = await db
+    .prepare(
+      `
+        SELECT * FROM tasks
+        WHERE agent_id = ?
+        ORDER BY created_at DESC
+        LIMIT ?
+      `
+    )
+    .bind(agentId, PENDING_TASK_LOOKUP_LIMIT)
+    .all();
+
+  const candidates = Array.isArray(rows?.results) ? rows.results : [];
+  for (const task of candidates) {
+    const requestPayload = safeJsonParse(task.request_payload_json) || {};
+    const erc8001 = parseErc8001Request(requestPayload);
+    if (erc8001?.taskId === onchainTaskId) {
+      return task;
+    }
+  }
+
+  return null;
 }
 
 function parseErc8001Request(body) {
@@ -817,7 +1110,7 @@ async function getErc8001Sdk(env) {
   return erc8001SdkPromise;
 }
 
-async function acceptAndWaitForPaymentDeposit(env, task, erc8001Request) {
+async function acceptTaskIfNeeded(env, task, erc8001Request) {
   const { sdk, address } = await getErc8001Sdk(env);
   const onchainTaskId = BigInt(erc8001Request.taskId);
   const stakeAmountWei = BigInt(erc8001Request.stakeAmountWei);
@@ -826,7 +1119,6 @@ async function acceptAndWaitForPaymentDeposit(env, task, erc8001Request) {
     stakeAmountWei: erc8001Request.stakeAmountWei,
     agentAddress: address,
     acceptedAt: null,
-    paymentObservedAt: null,
   };
 
   let onchainTask = await sdk.getTask(onchainTaskId);
@@ -850,30 +1142,12 @@ async function acceptAndWaitForPaymentDeposit(env, task, erc8001Request) {
       `Task ${erc8001Request.taskId} is not in Created/Accepted state (status ${status}).`
     );
   }
-
-  await waitForPaymentDeposit(sdk, onchainTaskId, env);
-  meta.paymentObservedAt = nowIso();
   return meta;
 }
 
-async function waitForPaymentDeposit(agentSdk, onchainTaskId, env) {
-  const timeoutMs = Number(env.ERC8001_PAYMENT_WAIT_MS || DEFAULT_PAYMENT_WAIT_MS);
-  const pollMs = Number(env.ERC8001_PAYMENT_POLL_MS || DEFAULT_PAYMENT_POLL_MS);
-  const startedAt = Date.now();
-
-  while (true) {
-    const deposited = await agentSdk.getPaymentDeposited(onchainTaskId);
-    if (deposited) {
-      return;
-    }
-
-    if (Date.now() - startedAt >= timeoutMs) {
-      throw new Error(
-        `Timed out waiting for payment deposit on task ${onchainTaskId.toString()}`
-      );
-    }
-    await sleep(pollMs);
-  }
+async function isPaymentDeposited(env, onchainTaskId) {
+  const { sdk } = await getErc8001Sdk(env);
+  return sdk.getPaymentDeposited(BigInt(onchainTaskId));
 }
 
 function buildResultUri(agentId, runId, erc8001Request, env) {
@@ -929,10 +1203,6 @@ async function assertErc8001Completion(env, task, completedTask, erc8001Request,
     assertedAt: nowIso(),
     resultURI,
   };
-}
-
-async function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function resolveSkillId(agent, body) {
