@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { TaskSearchBox } from '@/components/TaskSearchBox';
 import { AgentRoutesList } from '@/components/AgentRoutesList';
 import { TaskConfigForm } from '@/components/TaskConfigForm';
+import { TaskHistoryList } from '@/components/TaskHistoryList';
 import { useAgentMatching } from '@/hooks/useAgentMatching';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
@@ -15,6 +16,7 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import HubIcon from '@mui/icons-material/Hub';
 import DarkVeil from '@/components/ui/DarkVeil';
 import Image from 'next/image';
+import Link from 'next/link';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAgentSDK } from '@/hooks/useAgentSDK';
 import { MOCK_TOKEN_ADDRESS, ESCROW_ADDRESS } from '@/config/constants';
@@ -99,6 +101,12 @@ export default function Home() {
         deadline // Use deadline from TaskConfigForm
       );
 
+      // Save taskId to local storage for history tracking
+      if (typeof window !== 'undefined') {
+        const savedTasks = JSON.parse(localStorage.getItem('r8004_tasks') || '[]');
+        localStorage.setItem('r8004_tasks', JSON.stringify([...savedTasks, taskId.toString()]));
+      }
+
       toast.success(`Task created (ID: ${taskId})! Waiting for agent to accept...`, { id: toastId });
 
       // Note: Payment will be deposited after agent accepts the task
@@ -135,19 +143,23 @@ export default function Home() {
       {/* Navbar */}
       <nav className="flex-none flex items-center justify-between py-4 px-8 border-b border-white/5 relative z-30 backdrop-blur-md bg-background/20">
         <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-16 h-16 relative"> 
-            <Image 
-              src="/R8004_logo.png" 
-              alt="R8004 Logo" 
-              fill 
-              className="object-contain"
-            />
-          </div>
-          <span className="text-4xl font-black tracking-tighter text-white">R8004</span> 
+              <Image 
+                src="/R8004_logo.png" 
+                alt="R8004 Logo" 
+                fill 
+                className="object-contain"
+              />
+            </div>
+            <span className="text-4xl font-black tracking-tighter text-white">R8004</span> 
+          </Link>
         </div>
         <div className="hidden md:flex gap-1 p-1 bg-white/5 rounded-full border border-white/10">
           <button className="px-4 py-1.5 rounded-full bg-white/10 text-white font-medium text-xs transition-all">Exchange</button>
-          <button className="px-4 py-1.5 rounded-full hover:bg-white/5 text-muted-foreground font-medium text-xs transition-all">Portfolio</button>
+          <Link href="/activity">
+            <button className="px-4 py-1.5 rounded-full hover:bg-white/5 text-muted-foreground font-medium text-xs transition-all">Activity</button>
+          </Link>
         </div>
         <ConnectButton />
       </nav>
