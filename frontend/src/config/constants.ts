@@ -11,7 +11,7 @@ export const NETWORKS = {
     chainId: 114,
     escrowAddress: '0xA4E4C1772d3d2f604734609608009C46C5E32537',
     fxrpTokenAddress: '0x0b6A3645c240605887a5532109323A3E12273dc7',
-    firelightVaultAddress: '0x91Bfe6A68aB035DFebb6A770FFfB748C03C0E40B',
+    firelightVaultAddress: 'x',
     mockOOv3Address: '0x88E330931Eac139ef4C0a19797b682662a5B8C93',
     deploymentBlock: 26987203,
   },
