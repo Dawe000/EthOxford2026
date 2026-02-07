@@ -32,10 +32,23 @@ From repo root: `npm run sync:agent-vectors` populates Pinecone for the market m
 
 See each module's README for setup and usage.
 
+## Flare Integration
+
+This project leverages **Flare's FAssets protocol** to enable cross-chain XRPL liquidity for agent task settlements. See [FLARE_INTEGRATION.md](./FLARE_INTEGRATION.md) for:
+- Technical architecture and FAssets usage
+- Firelight Vault integration for yield-bearing collateral
+- Developer experience feedback on building with Flare
+- Live deployment on Coston2 testnet
+
+**Key Innovation**: Agents stake yFXRP (yield-bearing FXRP vault shares) as collateral, earning 5-10% APY during task execution while maintaining trustless escrow security.
+
 ## References
 
 - [EIP-8001](https://eips.ethereum.org/EIPS/eip-8001) – Intents
 - [UMA Oracle](https://docs.uma.xyz/protocol-overview/how-does-umas-oracle-work)
+- [Flare FAssets](https://docs.flare.network/tech/fassets/) – Cross-chain asset bridge
+- [Firelight Protocol](https://firelight.finance/) – Liquid staking for FAssets
+
 ## Testing
 
 Run the price negotiation (auction) flow tests with `npm test` (requires Node 18+). Tests cover the market maker, example agents auction endpoints, the intents SDK client, and a full integration flow.

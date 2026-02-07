@@ -4,6 +4,7 @@ import path from "path";
 
 const FIRELIGHT_VAULT_COSTON2 = "0x91Bfe6A68aB035DFebb6A770FFfB748C03C0E40B";
 const FTESTXRP_COSTON2 = "0x0b6A3645c240605887a5532109323A3E12273dc7"; // Real FTestXRP (6 decimals)
+const CUSTOM_VAULT_COSTON2 = "0xe07484f61fc5C02464ceE533D7535D0b5a257f22"; // Custom yFXRP vault
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -20,7 +21,7 @@ async function main() {
   await mockOOv3.waitForDeployment();
   console.log("✓ MockOOv3:", await mockOOv3.getAddress());
 
-  // 3. Deploy AgentTaskEscrow (no vault integration - agents manage vault separately)
+  // 3. Deploy AgentTaskEscrow with two-token support
   const AgentTaskEscrow = await ethers.getContractFactory("AgentTaskEscrow");
   const escrow = await AgentTaskEscrow.deploy(
     await deployer.getAddress(), // Market maker
@@ -33,10 +34,12 @@ async function main() {
     7200, // 2hr UMA liveness
     ethers.keccak256(ethers.toUtf8Bytes("AGENT_TASK_V1")),
     ethers.parseEther("10"), // 10 FXRP min UMA bond
-    [fxrpAddress] // Allowed tokens: FTestXRP
+    [fxrpAddress, CUSTOM_VAULT_COSTON2] // Allowed tokens: FXRP and yFXRP
   );
   await escrow.waitForDeployment();
   console.log("✓ AgentTaskEscrow:", await escrow.getAddress());
+  console.log("  Whitelisted FXRP:", fxrpAddress);
+  console.log("  Whitelisted yFXRP:", CUSTOM_VAULT_COSTON2);
 
   // 4. Note: FTestXRP is already deployed - get from faucet at https://faucet.flare.network
   console.log("ℹ️  Get FTestXRP from faucet: https://faucet.flare.network");
@@ -48,6 +51,7 @@ async function main() {
     timestamp: new Date().toISOString(),
     contracts: {
       FXRP: fxrpAddress,
+      yFXRP: CUSTOM_VAULT_COSTON2,
       FirelightVault: FIRELIGHT_VAULT_COSTON2,
       AgentTaskEscrow: await escrow.getAddress(),
       MockOOv3: await mockOOv3.getAddress(),
@@ -55,7 +59,8 @@ async function main() {
     sdk: {
       escrowAddress: await escrow.getAddress(),
       fxrpTokenAddress: fxrpAddress,
-      fFXRPVaultAddress: FIRELIGHT_VAULT_COSTON2,
+      yFXRPTokenAddress: CUSTOM_VAULT_COSTON2,
+      firelightVaultAddress: FIRELIGHT_VAULT_COSTON2,
       rpcUrl: "https://coston2-api.flare.network/ext/C/rpc",
       chainId: 114,
       deploymentBlock: (await ethers.provider.getBlock("latest"))!.number,
