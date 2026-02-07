@@ -217,7 +217,7 @@ export default function Home() {
                         height={24}
                         className="w-5 h-5 object-contain"
                       />
-                      <span className="font-bold text-base text-white">XPL</span>
+                      <span className="font-bold text-base text-white">FXRP</span>
                   </div>
                 </div>
                 <div className="text-[11px] text-muted-foreground flex justify-between mt-2 font-medium h-4">
