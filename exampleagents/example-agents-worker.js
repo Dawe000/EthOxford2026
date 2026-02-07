@@ -287,20 +287,112 @@ async function processAgentTask(agent, body, inputText, env) {
     throw new Error('Missing VENICE_API_KEY in environment');
   }
 
-  const requestBody = {
+  const attempts = [
+    {
+      id: 'base',
+      maxTokens: 1600,
+      temperature: 0.2,
+      promptSuffix: '',
+      veniceParametersOverride: {},
+    },
+    {
+      id: 'disable_thinking',
+      maxTokens: 2200,
+      temperature: 0.2,
+      promptSuffix: '',
+      veniceParametersOverride: { disable_thinking: true },
+    },
+    {
+      id: 'fallback_best_effort',
+      maxTokens: 3200,
+      temperature: 0.1,
+      promptSuffix:
+        '\n\nIf sources are limited, return best-effort JSON and include uncertainty in the summary.',
+      veniceParametersOverride: { disable_thinking: true },
+    },
+  ];
+
+  let lastMeta = null;
+
+  for (const attempt of attempts) {
+    const requestBody = buildVeniceRequestBody({
+      model,
+      systemPrompt,
+      userPrompt: `${userPrompt}${attempt.promptSuffix}`,
+      baseVeniceParameters: agent.veniceParameters,
+      veniceParametersOverride: attempt.veniceParametersOverride,
+      maxTokens: attempt.maxTokens,
+      temperature: attempt.temperature,
+    });
+
+    const data = await callVenice(requestBody, apiKey);
+    const message = data?.choices?.[0]?.message || {};
+    const content = extractVeniceContent(message);
+    const cleaned = stripCodeFences(content);
+
+    lastMeta = {
+      attempt: attempt.id,
+      finishReason: data?.choices?.[0]?.finish_reason || null,
+      hasReasoningContent: Boolean(message?.reasoning_content),
+      usage: data?.usage || null,
+    };
+
+    if (!cleaned) {
+      continue;
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      parsed = null;
+    }
+
+    return {
+      agentId: agent.id,
+      skill: skill.id,
+      model: data?.model || model,
+      output: parsed || cleaned,
+      raw: parsed ? undefined : cleaned,
+      responseMeta: {
+        attempt: attempt.id,
+        finishReason: data?.choices?.[0]?.finish_reason || null,
+      },
+    };
+  }
+
+  throw new Error(`Venice AI returned empty content after retries: ${JSON.stringify(lastMeta)}`);
+}
+
+function buildVeniceRequestBody({
+  model,
+  systemPrompt,
+  userPrompt,
+  baseVeniceParameters,
+  veniceParametersOverride,
+  maxTokens,
+  temperature,
+}) {
+  const veniceParameters = {
+    disable_thinking: true,
+    include_venice_system_prompt: false,
+    ...(baseVeniceParameters || {}),
+    ...(veniceParametersOverride || {}),
+  };
+
+  return {
     model: model,
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    max_tokens: 1600,
-    temperature: 0.2,
+    max_tokens: maxTokens,
+    temperature: temperature,
+    venice_parameters: veniceParameters,
   };
+}
 
-  if (agent.veniceParameters) {
-    requestBody.venice_parameters = agent.veniceParameters;
-  }
-
+async function callVenice(requestBody, apiKey) {
   const response = await fetch('https://api.venice.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -315,24 +407,35 @@ async function processAgentTask(agent, body, inputText, env) {
     throw new Error(`Venice AI error ${response.status}: ${errorText}`);
   }
 
-  const data = await response.json();
-  const content = data?.choices?.[0]?.message?.content || '';
-  const cleaned = stripCodeFences(content);
+  return response.json();
+}
 
-  let parsed;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    parsed = null;
+function extractVeniceContent(message) {
+  const content = message?.content;
+
+  if (typeof content === 'string') {
+    return content;
   }
 
-  return {
-    agentId: agent.id,
-    skill: skill.id,
-    model: data?.model || model,
-    output: parsed || cleaned,
-    raw: parsed ? undefined : cleaned,
-  };
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => {
+        if (typeof part === 'string') {
+          return part;
+        }
+        if (typeof part?.text === 'string') {
+          return part.text;
+        }
+        return '';
+      })
+      .join('\n');
+  }
+
+  if (typeof content?.text === 'string') {
+    return content.text;
+  }
+
+  return '';
 }
 
 function stripCodeFences(text) {
