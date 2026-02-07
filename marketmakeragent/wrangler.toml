@@ -1,0 +1,7 @@
+name = "market-maker-agent"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# [vars]
+# TRUST_API_URL = "http://localhost:8787"
+# AGENT_BASE_URLS = "http://localhost:8788/1,http://localhost:8788/2"
