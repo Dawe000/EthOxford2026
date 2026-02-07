@@ -206,6 +206,63 @@ export async function getTasksByAgent(
   return tasks;
 }
 
+/** Fetch task description URI from TaskCreated event. Returns null if no event found. */
+export async function getTaskDescriptionUri(
+  escrowAddress: string,
+  provider: Provider,
+  taskId: bigint
+): Promise<string | null> {
+  const escrow = getEscrowContract(escrowAddress, provider);
+  const filter = escrow.filters.TaskCreated(taskId);
+  const events = await escrow.queryFilter(filter);
+  const first = events[0];
+  if (!first || !("args" in first) || !first.args) return null;
+  const args = first.args as { taskId?: bigint; client?: string; descriptionURI?: string };
+  return args.descriptionURI ?? null;
+}
+
+/** Escrow timing and bond config */
+export interface EscrowConfig {
+  cooldownPeriod: bigint;
+  agentResponseWindow: bigint;
+  disputeBondBps: bigint;
+  escalationBondBps: bigint;
+  umaConfig: {
+    oracle: string;
+    liveness: bigint;
+    identifier: string;
+    minimumBond: bigint;
+  };
+}
+
+/** Fetch escrow timing and bond parameters in one call. */
+export async function getEscrowConfig(
+  escrowAddress: string,
+  provider: Provider
+): Promise<EscrowConfig> {
+  const escrow = getEscrowContract(escrowAddress, provider);
+  const [cooldownPeriod, agentResponseWindow, disputeBondBps, escalationBondBps, umaConfig] =
+    await Promise.all([
+      escrow.cooldownPeriod(),
+      escrow.agentResponseWindow(),
+      escrow.disputeBondBps(),
+      escrow.escalationBondBps(),
+      escrow.umaConfig(),
+    ]);
+  return {
+    cooldownPeriod,
+    agentResponseWindow,
+    disputeBondBps,
+    escalationBondBps,
+    umaConfig: {
+      oracle: umaConfig.oracle,
+      liveness: umaConfig.liveness,
+      identifier: umaConfig.identifier,
+      minimumBond: umaConfig.minimumBond,
+    },
+  };
+}
+
 // --- Intent / commitment views ---
 
 export async function getClientIntents(

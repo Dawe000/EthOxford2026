@@ -29,10 +29,12 @@ export {
 } from "./ipfs.js";
 export { matchAgents } from "./marketmaker.js";
 export { getEscrowContract, getErc20Contract, parseTask, ensureAllowance } from "./contract.js";
-export type { TaskAction, EscrowTimingConfig } from "./tasks.js";
+export type { TaskAction, EscrowTimingConfig, EscrowConfig } from "./tasks.js";
 export {
   getNextTaskId,
   getTask,
+  getTaskDescriptionUri,
+  getEscrowConfig,
   getTasksByIdRange,
   getTasksByClient,
   getTasksByAgent,

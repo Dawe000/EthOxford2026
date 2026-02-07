@@ -89,6 +89,8 @@ Standalone functions (Provider-only, no signer required):
 |----------|-------------|
 | `getNextTaskId(escrowAddress, provider)` | Get next task ID (total task count). |
 | `getTask(escrowAddress, provider, taskId)` | Fetch task by ID. |
+| `getTaskDescriptionUri(escrowAddress, provider, taskId)` | Fetch task description URI from TaskCreated event (null if none). |
+| `getEscrowConfig(escrowAddress, provider)` | Fetch escrow timing and bond params (cooldownPeriod, agentResponseWindow, disputeBondBps, escalationBondBps, umaConfig). |
 | `getTasksByClient(escrowAddress, provider, clientAddress)` | Get tasks created by client. |
 | `getTasksByAgent(escrowAddress, provider, agentAddress)` | Get tasks accepted by agent. |
 | `getTasksByIdRange(escrowAddress, provider, fromId, toId)` | Fetch tasks by ID range. |
@@ -102,6 +104,8 @@ Status helpers: `isInProgress(task)`, `isContested(task)`, `isResolved(task)`, `
 Action helpers: `needsClientDisputeBond(task)`, `needsAgentEscalationBond(task)`, `canClientSettleAgentConceded(...)`, `canAgentSettleNoContest(...)`, `canClientTimeoutCancel(...)`.
 
 Bond amounts: `getDisputeBondAmount(task, disputeBondBps)`, `getEscalationBondAmount(task, escalationBondBps, umaMinBond)`.
+
+Use `getEscrowConfig` to obtain `agentResponseWindow`, `disputeBondBps`, and `umaConfig.minimumBond` for status helpers and bond calculations. Use `getTaskDescriptionUri` with `fetchFromIpfs` to load task spec when deciding whether to dispute.
 
 ## IPFS Fetch (Evidence)
 
