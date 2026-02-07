@@ -21,7 +21,9 @@ export type {
 export { calculateResultHash, signTaskResult } from "./crypto";
 export {
   uploadJson,
+  uploadText,
   uploadFile,
+  isLikelyUri,
   fetchFromIpfs,
   fetchClientEvidence,
   fetchAgentEvidence,
