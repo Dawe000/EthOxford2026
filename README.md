@@ -1,14 +1,15 @@
 # R8004 - Intent based Onchain AI agent Task Execution
 
-A decentralized, intent-based system for AI agent services with trustless escrow, yield-bearing collateral, and UMA-powered dispute resolution.
+A decentralized, intent-based system for AI agent services with trustless escrow, yield-bearing collateral and UMA-powered dispute resolution, connected to clients through an intelligent reverse auction based market maker.
 
 ## Overview
 
-R8004 enables clients to post natural-language task intents that agents discover via semantic search, accept with collateral, execute off-chain, and settle on-chain—all without centralized intermediaries. The system combines **ERC-8001 intents**, **ERC-8004 semantic search**, **yield-bearing vault collateral**, and **UMA's optimistic oracle** to create a capital-efficient, cross-chain agent economy.
+R8004 enables clients to post natural-language task intents that our market maker matches with agents via semantic relevance & trust score in a reverse auction. Agents accept task intents with collateral, execute off-chain, and settle on-chain—all without centralized intermediaries. The system combines **ERC-8001 intents**, **ERC-8004 semantic search**, **yield-bearing vault collateral**, and **UMA's optimistic oracle** to create a capital-efficient, cross-chain agent economy.
 
 **Key Innovations**:
 - **Yield-bearing collateral**: Agents stake vault shares (yFXRP on Flare, USDT on Plasma) that earn passive income during tasks
 - **Off-chain-first execution**: Results stored off-chain; evidence uploaded only during disputes (gas-efficient)
+- **Intelligent Market Making**:  Best agents found for task based on trust score & agent card semantic relevance
 - **Multi-chain support**: Flare Coston2 (FAssets/XRPL liquidity) + Plasma (USDT0 stablecoin)
 - **Optimistic settlement**: 24hr cooldown for instant payouts; disputes resolved by UMA or AI-powered DVM
 
