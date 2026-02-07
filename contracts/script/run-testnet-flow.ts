@@ -7,14 +7,21 @@
  */
 import "dotenv/config";
 import { ethers } from "ethers";
-import { ClientSDK, AgentSDK } from "@erc8001/agent-task-sdk";
+import {
+  ClientSDK,
+  AgentSDK,
+  getPlasmaTestnetConfig,
+} from "@erc8001/agent-task-sdk";
 import * as fs from "fs";
 import * as path from "path";
 import { TESTNET_CONFIG } from "../config/testnet";
 
-const COOLDOWN_SECONDS = 180;
-const AGENT_RESPONSE_WINDOW_SECONDS = TESTNET_CONFIG.AGENT_RESPONSE_WINDOW; // 5 min
-const UMA_LIVENESS_SECONDS = TESTNET_CONFIG.UMA_LIVENESS; // 3 min
+const COOLDOWN_SECONDS = TESTNET_CONFIG.COOLDOWN_PERIOD;
+const AGENT_RESPONSE_WINDOW_SECONDS = TESTNET_CONFIG.AGENT_RESPONSE_WINDOW;
+// settleAgentConceded requires block.timestamp >= cooldownEndsAt + agentResponseWindow
+const PATH_B_CONCEDE_WAIT_SECONDS =
+  TESTNET_CONFIG.COOLDOWN_PERIOD + TESTNET_CONFIG.AGENT_RESPONSE_WINDOW;
+const UMA_LIVENESS_SECONDS = TESTNET_CONFIG.UMA_LIVENESS;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -44,31 +51,45 @@ async function main() {
     throw new Error("Set MNEMONIC in .env");
   }
 
-  const deploymentPath = path.join(process.cwd(), "deployments", "plasma-testnet.json");
-  const deployment = JSON.parse(fs.readFileSync(deploymentPath, "utf8"));
+  const baseConfig = getPlasmaTestnetConfig({
+    ipfs: process.env.PINATA_JWT
+      ? { provider: "pinata" as const, apiKey: process.env.PINATA_JWT }
+      : undefined,
+  });
 
-  const provider = new ethers.JsonRpcProvider(deployment.sdk.rpcUrl);
+  const deploymentPath = path.join(
+    process.cwd(),
+    "deployments",
+    "plasma-testnet.json"
+  );
+  let deployment: { chainId?: number; contracts?: { MockOOv3?: string }; sdk?: Record<string, string> } | null = null;
+  if (fs.existsSync(deploymentPath)) {
+    deployment = JSON.parse(fs.readFileSync(deploymentPath, "utf8"));
+  }
+
+  const config = {
+    ...baseConfig,
+    ...(deployment?.sdk?.escrowAddress && {
+      escrowAddress: deployment.sdk.escrowAddress,
+    }),
+    ...(deployment?.chainId && { chainId: deployment.chainId }),
+    ...(deployment?.sdk?.rpcUrl && { rpcUrl: deployment.sdk.rpcUrl }),
+  };
+
+  const tokenAddr =
+    deployment?.sdk?.mockTokenAddress ?? baseConfig.mockTokenAddress!;
+  const provider = new ethers.JsonRpcProvider(config.rpcUrl);
   const m = ethers.Mnemonic.fromPhrase(mnemonic.trim());
   const root = ethers.HDNodeWallet.fromSeed(m.computeSeed());
 
   const client = root.derivePath("m/44'/60'/0'/0/1").connect(provider);
   const agent = root.derivePath("m/44'/60'/0'/0/2").connect(provider);
 
-  const config = {
-    escrowAddress: deployment.sdk.escrowAddress,
-    chainId: deployment.chainId,
-    rpcUrl: deployment.sdk.rpcUrl,
-    ipfs: process.env.PINATA_JWT
-      ? { provider: "pinata" as const, apiKey: process.env.PINATA_JWT }
-      : undefined,
-  };
-
   const clientSdk = new ClientSDK(config, client);
   const agentSdk = new AgentSDK(config, agent);
 
   const paymentAmount = ethers.parseEther("100");
   const stakeAmount = ethers.parseEther("10");
-  const tokenAddr = deployment.sdk.mockTokenAddress;
   const token = new ethers.Contract(
     tokenAddr,
     ["function balanceOf(address) view returns (uint256)"],
@@ -129,8 +150,10 @@ async function main() {
     await clientSdk.disputeTask(taskId, "ipfs://client-evidence");
     console.log("   Done");
 
-    console.log(`6. Waiting ${AGENT_RESPONSE_WINDOW_SECONDS}s for agent response window...`);
-    await sleep(AGENT_RESPONSE_WINDOW_SECONDS * 1000);
+    console.log(
+      `6. Waiting ${PATH_B_CONCEDE_WAIT_SECONDS}s (cooldown + agent response window)...`
+    );
+    await sleep(PATH_B_CONCEDE_WAIT_SECONDS * 1000);
 
     const disputeBond = (paymentAmount * 100n) / 10000n;
     const balanceBefore = await token.balanceOf(client.address);
@@ -173,7 +196,8 @@ async function main() {
     console.log(`7. Waiting ${UMA_LIVENESS_SECONDS}s for UMA liveness...`);
     await sleep(UMA_LIVENESS_SECONDS * 1000);
 
-    const mockOOv3Addr = deployment.contracts.MockOOv3;
+    const mockOOv3Addr =
+      deployment?.contracts?.MockOOv3 ?? baseConfig.mockOOv3Address;
     const mockOOv3 = new ethers.Contract(
       mockOOv3Addr,
       ["function pushResolution(bytes32 assertionId, bool assertedTruthfully) external"],
