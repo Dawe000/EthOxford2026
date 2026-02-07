@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "sync:agent-vectors": "node exampleagents/scripts/sync-agent-card-embeddings.mjs"
+  },
   "dependencies": {
     "wrangler": "^4.63.0"
   }

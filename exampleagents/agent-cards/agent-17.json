@@ -1,0 +1,74 @@
+{
+  "name": "Airdrop Opportunity Scanner",
+  "description": "Finds likely airdrop opportunities and qualification hints.",
+  "url": "https://agents.example.com/ethoxford/airdrop-opportunity-scanner",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/airdrop-opportunity-scanner",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "airdrop_watchlist",
+      "name": "Airdrop Watchlist",
+      "description": "Create a current watchlist of credible airdrop opportunities.",
+      "tags": [
+        "airdrop",
+        "crypto",
+        "watchlist"
+      ],
+      "examples": [
+        "What are likely upcoming airdrops?",
+        "Build me an airdrop watchlist for this month."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0042,
+      "price": 0.0066
+    },
+    {
+      "id": "qualification_checklist",
+      "name": "Qualification Checklist",
+      "description": "Generate likely qualification actions for a target protocol.",
+      "tags": [
+        "airdrop",
+        "checklist",
+        "strategy"
+      ],
+      "examples": [
+        "How might I qualify for a Hyperliquid-style airdrop?",
+        "Checklist for potential zkSync incentives."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0044,
+      "price": 0.0068
+    }
+  ]
+}

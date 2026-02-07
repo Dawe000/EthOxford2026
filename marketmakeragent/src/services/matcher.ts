@@ -1,18 +1,26 @@
 import { AgentCapabilityCard, RankedAgent, TaskMatchRequest } from '../types';
-import { VeniceService, cosineSimilarity } from './venice';
+import { VeniceService } from './venice';
 import { AgentRegistry } from './agentRegistry';
 import { TrustService } from './trust';
+import { PineconeService } from './pinecone';
 
 export class AgentMatcher {
 	constructor(
 		private veniceService: VeniceService,
+		private pineconeService: PineconeService,
 		private agentRegistry: AgentRegistry,
 		private trustService?: TrustService
 	) {}
 
 	async matchAgents(request: TaskMatchRequest): Promise<RankedAgent[]> {
-		const queryEmbedding = await this.veniceService.generateEmbedding(request.query);
+		const refinedQuery = await this.veniceService.refineQuery(request.query);
+		const queryEmbedding = await this.veniceService.generateEmbedding(refinedQuery);
 		const agents = this.agentRegistry.getAll();
+		const agentById = new Map(agents.map((agent) => [agent.agentId, agent]));
+		const pineconeMatches = await this.pineconeService.queryByVector(
+			queryEmbedding,
+			Math.max(agents.length, 10)
+		);
 
 		// Fetch all trust scores upfront if trust service is available
 		let trustScores: Map<string, number> | undefined;
@@ -21,14 +29,12 @@ export class AgentMatcher {
 		}
 
 		const scoredAgents = await Promise.all(
-			agents.map(async (agent) => {
-				const agentText = this.agentToText(agent);
-
-				if (!agent.embedding) {
-					agent.embedding = await this.veniceService.generateEmbedding(agentText);
+			pineconeMatches.map(async (match) => {
+				const agent = agentById.get(match.id);
+				if (!agent) {
+					return null;
 				}
-
-				const semanticScore = cosineSimilarity(queryEmbedding, agent.embedding);
+				const semanticScore = match.score;
 				const trustScore = await this.getTrustScore(agent, trustScores);
 				const combinedScore = semanticScore * 0.7 + trustScore * 0.3;
 
@@ -41,24 +47,27 @@ export class AgentMatcher {
 			})
 		);
 
-		scoredAgents.sort((a, b) => b.score - a.score);
+		const rankedAgents = scoredAgents.filter(
+			(
+				scored
+			): scored is {
+				agent: AgentCapabilityCard;
+				score: number;
+				trustScore: number;
+				semanticScore: number;
+			} => scored !== null
+		);
 
-		return scoredAgents.slice(0, 5).map((scored) => {
-			// Remove embedding from agent card for cleaner API response
-			const { embedding, ...agentWithoutEmbedding } = scored.agent;
+		rankedAgents.sort((a, b) => b.score - a.score);
+
+		return rankedAgents.slice(0, 5).map((scored) => {
 			return {
-				agent: agentWithoutEmbedding,
+				agent: scored.agent,
 				score: scored.score,
 				trustScore: scored.trustScore,
 				reason: this.generateMatchReason(scored.semanticScore, scored.trustScore),
 			};
 		});
-	}
-
-	private agentToText(agent: AgentCapabilityCard): string {
-		const domains = agent.supportedDomains?.join(', ') || '';
-		const skillsText = agent.skills?.map((s) => s.name).join(', ') || '';
-		return `${agent.name}. ${agent.description} Capabilities: ${domains || skillsText}`;
 	}
 
 	private async getTrustScore(

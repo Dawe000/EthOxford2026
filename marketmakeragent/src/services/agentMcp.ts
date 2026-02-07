@@ -110,7 +110,23 @@ export class AgentMcpClient {
 	}
 
 	async listAllAgents(): Promise<string[]> {
-		const agentIds = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+		const response = await fetch(`${this.baseUrl}/`);
+		if (!response.ok) {
+			throw new Error(`Failed to list agents: ${response.status}`);
+		}
+
+		const data = (await response.json()) as { routes?: string[] };
+		if (!Array.isArray(data.routes)) {
+			throw new Error('Agent list response missing routes array');
+		}
+
+		const agentIds = data.routes
+			.map((route) => String(route).replace(/^\//, ''))
+			.filter((id) => /^\d+$/.test(id));
+		if (agentIds.length === 0) {
+			throw new Error('No agent IDs discovered from agents worker');
+		}
+
 		return agentIds;
 	}
 

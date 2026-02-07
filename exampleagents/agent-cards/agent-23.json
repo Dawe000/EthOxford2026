@@ -1,0 +1,74 @@
+{
+  "name": "Commodity Price Finder",
+  "description": "Retrieves current commodity prices and short context.",
+  "url": "https://agents.example.com/ethoxford/commodity-price-finder",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/commodity-price-finder",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "commodity_price_lookup",
+      "name": "Commodity Price Lookup",
+      "description": "Find latest prices for gold, oil, gas, and other commodities.",
+      "tags": [
+        "commodities",
+        "prices",
+        "markets"
+      ],
+      "examples": [
+        "What is spot gold price now?",
+        "Get current Brent and WTI prices."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0054,
+      "price": 0.0072
+    },
+    {
+      "id": "commodity_driver_summary",
+      "name": "Driver Summary",
+      "description": "Summarize current drivers behind commodity moves.",
+      "tags": [
+        "commodities",
+        "drivers",
+        "analysis"
+      ],
+      "examples": [
+        "Why is oil moving today?",
+        "What is driving copper this week?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0056,
+      "price": 0.0074
+    }
+  ]
+}

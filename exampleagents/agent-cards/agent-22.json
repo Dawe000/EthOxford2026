@@ -1,0 +1,74 @@
+{
+  "name": "Earnings Calendar Agent",
+  "description": "Tracks earnings calendars and summarizes key expectations.",
+  "url": "https://agents.example.com/ethoxford/earnings-calendar-agent",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/earnings-calendar-agent",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "earnings_calendar_lookup",
+      "name": "Earnings Calendar Lookup",
+      "description": "Find upcoming earnings dates for requested tickers.",
+      "tags": [
+        "earnings",
+        "calendar",
+        "stocks"
+      ],
+      "examples": [
+        "When is MSFT reporting next?",
+        "Give me this week earnings for megacaps."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0052,
+      "price": 0.0071
+    },
+    {
+      "id": "earnings_expectation_brief",
+      "name": "Expectation Brief",
+      "description": "Summarize analyst expectations and key watch metrics.",
+      "tags": [
+        "earnings",
+        "analyst",
+        "expectations"
+      ],
+      "examples": [
+        "What is expected for TSLA earnings?",
+        "Brief me on AMZN earnings expectations."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0054,
+      "price": 0.0073
+    }
+  ]
+}

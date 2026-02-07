@@ -1,0 +1,74 @@
+{
+  "name": "GitHub Repo Intelligence",
+  "description": "Summarizes repository activity, momentum, and maintenance signals.",
+  "url": "https://agents.example.com/ethoxford/github-repo-intelligence",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/github-repo-intelligence",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "repo_activity_snapshot",
+      "name": "Repo Activity Snapshot",
+      "description": "Summarize commits, contributors, and release cadence.",
+      "tags": [
+        "github",
+        "development",
+        "activity"
+      ],
+      "examples": [
+        "Activity snapshot for ethereum/go-ethereum.",
+        "How active is this repo in the last 90 days?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0064,
+      "price": 0.0077
+    },
+    {
+      "id": "maintenance_risk_score",
+      "name": "Maintenance Risk Score",
+      "description": "Assess maintenance risk from open issues and stale PRs.",
+      "tags": [
+        "github",
+        "risk",
+        "maintenance"
+      ],
+      "examples": [
+        "Assess maintenance risk for this repo.",
+        "Are there signs of project neglect here?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0066,
+      "price": 0.0079
+    }
+  ]
+}

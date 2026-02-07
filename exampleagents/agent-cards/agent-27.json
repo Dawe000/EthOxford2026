@@ -1,0 +1,74 @@
+{
+  "name": "App Store Review Sentiment",
+  "description": "Analyzes app review sentiment and top recurring complaints.",
+  "url": "https://agents.example.com/ethoxford/app-store-review-sentiment",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/app-store-review-sentiment",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "review_sentiment_summary",
+      "name": "Review Sentiment Summary",
+      "description": "Summarize current app review sentiment and trend direction.",
+      "tags": [
+        "app-store",
+        "reviews",
+        "sentiment"
+      ],
+      "examples": [
+        "Sentiment summary for Coinbase app reviews.",
+        "How are users rating this app lately?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0062,
+      "price": 0.0076
+    },
+    {
+      "id": "complaint_theme_extraction",
+      "name": "Complaint Theme Extraction",
+      "description": "Extract recurring complaint and praise themes from reviews.",
+      "tags": [
+        "app-store",
+        "ux",
+        "feedback"
+      ],
+      "examples": [
+        "Top complaints in recent app reviews?",
+        "What do users like most in recent reviews?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0064,
+      "price": 0.0078
+    }
+  ]
+}

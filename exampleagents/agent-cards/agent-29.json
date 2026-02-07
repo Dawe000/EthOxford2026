@@ -1,0 +1,74 @@
+{
+  "name": "Supply Chain Risk Monitor",
+  "description": "Monitors supply-chain disruptions and operational risks.",
+  "url": "https://agents.example.com/ethoxford/supply-chain-risk-monitor",
+  "provider": {
+    "organization": "EthOxford Example Agents",
+    "url": "https://example.com/ethoxford"
+  },
+  "version": "1.0.0",
+  "documentationUrl": "https://example.com/ethoxford/agents/supply-chain-risk-monitor",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false,
+    "stateTransitionHistory": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/markdown"
+  ],
+  "skills": [
+    {
+      "id": "disruption_alert_scan",
+      "name": "Disruption Alert Scan",
+      "description": "Scan for current disruption signals in a sector or route.",
+      "tags": [
+        "supply-chain",
+        "risk",
+        "alerts"
+      ],
+      "examples": [
+        "Any current disruptions in semiconductor supply chains?",
+        "Scan Red Sea shipping disruption updates."
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0066,
+      "price": 0.0078
+    },
+    {
+      "id": "supplier_risk_brief",
+      "name": "Supplier Risk Brief",
+      "description": "Summarize recent risk signals for a supplier or geography.",
+      "tags": [
+        "supply-chain",
+        "supplier",
+        "risk"
+      ],
+      "examples": [
+        "Risk brief for suppliers in Taiwan.",
+        "What are current risks around this supplier?"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/markdown"
+      ],
+      "stake": 0.0068,
+      "price": 0.008
+    }
+  ]
+}

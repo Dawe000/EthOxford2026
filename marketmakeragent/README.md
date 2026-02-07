@@ -4,15 +4,15 @@ Routes natural-language task intents to agents using ERC8004 semantic search.
 
 ## Overview
 
-Cloudflare Worker that matches client task queries to suitable agents using Venice AI embeddings and semantic similarity scoring.
+Cloudflare Worker that matches client task queries to suitable agents using Venice AI query embeddings and Pinecone vector search.
 
 ## Features
 
-- **Venice API Integration**: Generates semantic embeddings for task queries and agent capabilities
-- **Semantic Matching**: Cosine similarity scoring between queries and agent capability cards
+- **Venice API Integration**: Generates semantic embeddings for task queries
+- **Pinecone Vector Search**: Uses stored agent-card vectors for semantic retrieval
 - **Trust Scoring**: Evaluates agents based on stake requirements and SLA metrics
 - **Ranked Results**: Returns top 5 agents with match scores and reasoning
-- **Mock Registry**: 5 example agents (DeFi, security, NFT, gas, DAO)
+- **Dynamic Agent Discovery**: Fetches available agent IDs/cards from the agents worker
 
 ## API Endpoints
 
@@ -39,7 +39,7 @@ Match agents to task query
 ```json
 {
   "query": "Find yield farming opportunities on Base chain",
-  "matchStrategy": "semantic-embedding-cosine-similarity",
+  "matchStrategy": "semantic-pinecone-cosine-similarity",
   "agents": [
     {
       "agent": { /* AgentCapabilityCard */ },
@@ -63,6 +63,12 @@ npm run dev
 # Type check
 npm run typecheck
 
+# Run local test suite (mocks Venice/Pinecone/agent worker APIs)
+npm test
+
+# Run live smoke tests against Venice + Pinecone (real network calls)
+npm run test:live
+
 # Deploy to Cloudflare
 npm run deploy
 ```
@@ -72,22 +78,50 @@ npm run deploy
 Set via `wrangler secret put`:
 ```bash
 wrangler secret put VENICE_API_KEY
+wrangler secret put PINECONE_API_KEY
 ```
 
-Or use `.dev.vars` for local development:
+Set non-secret host via `wrangler.toml` or `.dev.vars`:
 ```
-VENICE_API_KEY=your-api-key-here
+PINECONE_INDEX_HOST=https://your-index-host.pinecone.io
 ```
+
+## Live Tests
+
+`npm run test:live` runs service-level smoke tests that hit live Venice embeddings and live Pinecone query APIs.
+
+Required env vars (from process env or repo-root `.env`):
+```
+VENICE_API_KEY=...
+PINECONE_API_KEY=...
+PINECONE_INDEX_HOST=...
+```
+
+Optional env var:
+```
+LIVE_TEST_QUERY=your custom query text
+```
+
+Prerequisite:
+```
+# From repo root, ensure Pinecone already has vectors
+npm run sync:agent-vectors
+```
+
+If Pinecone returns no matches, the live test fails with a setup hint to run the sync command.
+
+Cost note: live tests call paid external APIs (Venice + Pinecone), so keep them opt-in.
 
 ## Architecture
 
 - **VeniceService**: Generates embeddings via Venice AI API
-- **AgentRegistry**: Mock registry of agent capability cards
-- **AgentMatcher**: Semantic matching + trust scoring algorithm
+- **PineconeService**: Queries Pinecone for nearest agent vectors
+- **AgentRegistry**: Holds fetched agent capability cards for response shaping
+- **AgentMatcher**: Pinecone semantic score + trust scoring algorithm
 - **index.ts**: Cloudflare Worker request handler
 
 ## Scoring Algorithm
 
-- **Semantic Score (70%)**: Cosine similarity between query and agent embeddings
+- **Semantic Score (70%)**: Pinecone similarity score from query vector match
 - **Trust Score (30%)**: Based on stake amount + completion time
 - Final agents ranked by combined score

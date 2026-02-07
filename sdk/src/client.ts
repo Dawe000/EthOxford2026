@@ -1,19 +1,19 @@
 import type { Signer } from "ethers";
-import type { SDKConfig } from "./config.js";
-import type { Task, TaskMatchRequest, TaskMatchResponse } from "./types.js";
+import type { SDKConfig } from "./config";
+import type { Task, TaskMatchRequest, TaskMatchResponse } from "./types";
 import {
   getEscrowContract,
   getErc20Contract,
   parseTask,
   ensureAllowance,
-} from "./contract.js";
+} from "./contract";
 import {
   getTasksByClient,
   getClientTasksNeedingAction,
   isInProgress,
-} from "./tasks.js";
-import { uploadJson, uploadText, fetchTaskEvidence, isLikelyUri } from "./ipfs.js";
-import { matchAgents } from "./marketmaker.js";
+} from "./tasks";
+import { uploadJson, fetchTaskEvidence } from "./ipfs";
+import { matchAgents } from "./marketmaker";
 
 export class ClientSDK {
   constructor(
