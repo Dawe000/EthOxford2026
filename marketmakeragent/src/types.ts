@@ -26,7 +26,6 @@ export interface AgentCapabilityCard {
 		scheme: 'bearer' | 'signature' | 'none';
 		publicKey?: string;
 	};
-	embedding?: number[];
 }
 
 export interface TaskMatchRequest {

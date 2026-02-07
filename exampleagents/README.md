@@ -42,3 +42,19 @@ AGENT_BASE_URL=https://example-agent.<your-account>.workers.dev node tests/agent
 - A2A result intake: `POST /{id}/a2a/tasks/{taskId}/result`
 
 Each agent calls Venice AI via `https://api.venice.ai/api/v1/chat/completions` and requires `VENICE_API_KEY`.
+
+## Pinecone Vector Sync
+
+After deploying test agents with `wrangler deploy`, run this from repo root to generate Venice embeddings from `exampleagents/agent-cards` and upsert them to Pinecone:
+
+```bash
+npm run sync:agent-vectors
+```
+
+Required root `.env` values:
+
+```
+VENICE_API_KEY=...
+PINECONE_API_KEY=...
+PINECONE_INDEX_HOST=https://ethoxford-to38e6r.svc.aped-4627-b74a.pinecone.io
+```

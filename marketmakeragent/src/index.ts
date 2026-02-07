@@ -4,9 +4,12 @@ import { AgentRegistry } from './services/agentRegistry';
 import { AgentMatcher } from './services/matcher';
 import { TrustService } from './services/trust';
 import { handleAgentMcpRoutes } from './api/agentMcpEndpoints';
+import { PineconeService } from './services/pinecone';
 
 export interface Env {
 	VENICE_API_KEY: string;
+	PINECONE_API_KEY: string;
+	PINECONE_INDEX_HOST: string;
 	ENVIRONMENT: string;
 	AGENTS_WORKER_URL?: string;
 	TRUST_API_URL?: string;
@@ -46,6 +49,24 @@ export default {
 						}
 					);
 				}
+				if (!env.PINECONE_API_KEY) {
+					return new Response(
+						JSON.stringify({ error: 'PINECONE_API_KEY not configured' }),
+						{
+							status: 500,
+							headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+						}
+					);
+				}
+				if (!env.PINECONE_INDEX_HOST) {
+					return new Response(
+						JSON.stringify({ error: 'PINECONE_INDEX_HOST not configured' }),
+						{
+							status: 500,
+							headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+						}
+					);
+				}
 
 				const body = (await request.json()) as TaskMatchRequest;
 
@@ -60,6 +81,10 @@ export default {
 				}
 
 				const veniceService = new VeniceService(env.VENICE_API_KEY);
+				const pineconeService = new PineconeService(
+					env.PINECONE_API_KEY,
+					env.PINECONE_INDEX_HOST
+				);
 
 				// Fetch agents from worker
 				const agentBaseUrl = env.AGENTS_WORKER_URL || 'https://example-agent.lynethlabs.workers.dev';
@@ -82,14 +107,19 @@ export default {
 				// Initialize trust service if URL is provided
 				const trustService = env.TRUST_API_URL ? new TrustService(env.TRUST_API_URL) : undefined;
 
-				const matcher = new AgentMatcher(veniceService, agentRegistry, trustService);
+				const matcher = new AgentMatcher(
+					veniceService,
+					pineconeService,
+					agentRegistry,
+					trustService
+				);
 
 				const rankedAgents = await matcher.matchAgents(body);
 
 				const response: TaskMatchResponse = {
 					query: body.query,
 					agents: rankedAgents,
-					matchStrategy: 'semantic-embedding-cosine-similarity',
+					matchStrategy: 'semantic-pinecone-cosine-similarity',
 				};
 
 				return new Response(JSON.stringify(response, null, 2), {
