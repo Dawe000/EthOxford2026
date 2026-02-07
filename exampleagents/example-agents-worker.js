@@ -113,6 +113,8 @@ export default {
             `/${agentId}/a2a/tasks`,
             `/${agentId}/a2a/tasks/{taskId}/status`,
             `/${agentId}/a2a/tasks/{taskId}/result`,
+            `/${agentId}/a2a/auction/join`,
+            `/${agentId}/a2a/auction/{auctionId}/bid`,
           ],
         },
         200,

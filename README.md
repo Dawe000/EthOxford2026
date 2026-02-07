@@ -36,3 +36,6 @@ See each module's README for setup and usage.
 
 - [EIP-8001](https://eips.ethereum.org/EIPS/eip-8001) – Intents
 - [UMA Oracle](https://docs.uma.xyz/protocol-overview/how-does-umas-oracle-work)
+## Testing
+
+Run the price negotiation (auction) flow tests with `npm test` (requires Node 18+). Tests cover the market maker, example agents auction endpoints, the intents SDK client, and a full integration flow.

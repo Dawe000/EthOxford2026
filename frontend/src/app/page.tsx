@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TaskSearchBox } from '@/components/TaskSearchBox';
 import { AgentRoutesList } from '@/components/AgentRoutesList';
 import { TaskConfigForm } from '@/components/TaskConfigForm';
+import { TaskContestationActions } from '@/components/TaskContestationActions';
 import { useAgentMatching } from '@/hooks/useAgentMatching';
+import { useEscrowTiming } from '@/hooks/useEscrowTiming';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Settings, RefreshCw, ArrowDown } from 'lucide-react';
@@ -22,6 +24,7 @@ import { MOCK_TOKEN_ADDRESS } from '@/config/constants';
 import { dispatchErc8001Task } from '@/lib/api/marketMaker';
 import { formatEther, parseEther } from 'ethers';
 import { useAccount, useReadContract } from 'wagmi';
+import { TaskStatus, type Task } from '@sdk/types';
 import { toast } from 'sonner';
 
 const TASK_STATUS_LABELS: Record<number, string> = {
@@ -36,7 +39,11 @@ const TASK_STATUS_LABELS: Record<number, string> = {
   8: 'Resolved',
 };
 
-const TERMINAL_STATUSES = new Set<number>([6, 7, 8]);
+const TERMINAL_STATUSES = new Set<number>([
+  TaskStatus.TimeoutCancelled,
+  TaskStatus.AgentFailed,
+  TaskStatus.Resolved,
+]);
 
 export default function Home() {
   const { address } = useAccount();
@@ -49,14 +56,15 @@ export default function Home() {
 
   const [activeTaskId, setActiveTaskId] = useState<bigint | null>(null);
   const [activeAgentRunId, setActiveAgentRunId] = useState<string | null>(null);
-  const [activeTaskStatus, setActiveTaskStatus] = useState<number | null>(null);
-  const [activeTaskResultUri, setActiveTaskResultUri] = useState<string | null>(null);
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [lastFetchedResultUri, setLastFetchedResultUri] = useState<string | null>(null);
   const [paymentDeposited, setPaymentDeposited] = useState(false);
   const [agentResult, setAgentResult] = useState<unknown>(null);
   const [pollError, setPollError] = useState<string | null>(null);
 
   const { data: agents, isLoading, error } = useAgentMatching(query);
   const sdk = useAgentSDK();
+  const { agentResponseWindowSec, disputeBondBps } = useEscrowTiming();
 
   const selectedAgent = useMemo(() => {
     if (!selectedAgentId || !agents) return null;
@@ -87,6 +95,37 @@ export default function Home() {
     },
   });
 
+  const refreshActiveTask = useCallback(async () => {
+    if (!sdk || activeTaskId === null) return;
+
+    const [task, deposited] = await Promise.all([
+      sdk.client.getTask(activeTaskId),
+      sdk.client.getPaymentDeposited(activeTaskId),
+    ]);
+
+    setActiveTask(task);
+    setPaymentDeposited(Boolean(deposited));
+
+    const status = Number(task.status);
+    if (
+      task.resultURI &&
+      status >= TaskStatus.ResultAsserted &&
+      task.resultURI !== lastFetchedResultUri
+    ) {
+      const response = await fetch(task.resultURI);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch result URI (${response.status})`);
+      }
+      const text = await response.text();
+      try {
+        setAgentResult(JSON.parse(text));
+      } catch {
+        setAgentResult(text);
+      }
+      setLastFetchedResultUri(task.resultURI);
+    }
+  }, [sdk, activeTaskId, lastFetchedResultUri]);
+
   useEffect(() => {
     if (!sdk || activeTaskId === null) return;
 
@@ -94,29 +133,9 @@ export default function Home() {
 
     const pollTask = async () => {
       try {
-        const task = await sdk.client.getTask(activeTaskId);
-        if (cancelled) return;
-
-        const status = Number(task.status);
-        setActiveTaskStatus(status);
-        setActiveTaskResultUri(task.resultURI || null);
-
-        const deposited = await sdk.client.getPaymentDeposited(activeTaskId);
-        if (cancelled) return;
-        setPaymentDeposited(Boolean(deposited));
-        setPollError(null);
-
-        if (!agentResult && task.resultURI && status >= 3) {
-          const response = await fetch(task.resultURI);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch result URI (${response.status})`);
-          }
-          const text = await response.text();
-          try {
-            setAgentResult(JSON.parse(text));
-          } catch {
-            setAgentResult(text);
-          }
+        await refreshActiveTask();
+        if (!cancelled) {
+          setPollError(null);
         }
       } catch (err: unknown) {
         if (cancelled) return;
@@ -133,7 +152,7 @@ export default function Home() {
       cancelled = true;
       clearInterval(intervalId);
     };
-  }, [sdk, activeTaskId, agentResult]);
+  }, [sdk, activeTaskId, refreshActiveTask]);
 
   const handleCreateTask = async () => {
     if (!sdk || !query || !selectedAgent) return;
@@ -167,8 +186,8 @@ export default function Home() {
 
       setActiveTaskId(taskId);
       setActiveAgentRunId(dispatchResult.runId);
-      setActiveTaskStatus(1);
-      setActiveTaskResultUri(null);
+      setActiveTask(null);
+      setLastFetchedResultUri(null);
       setPaymentDeposited(false);
       setAgentResult(null);
       setPollError(null);
@@ -199,6 +218,7 @@ export default function Home() {
     try {
       await sdk.client.depositPayment(activeTaskId);
       setPaymentDeposited(true);
+      await refreshActiveTask();
       toast.success('Payment deposited. Agent can now execute and assert completion.', { id: toastId });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
@@ -208,6 +228,7 @@ export default function Home() {
     }
   };
 
+  const activeTaskStatus = activeTask ? Number(activeTask.status) : null;
   const taskStatusLabel = activeTaskStatus === null
     ? 'No Active Task'
     : TASK_STATUS_LABELS[activeTaskStatus] || `Unknown (${activeTaskStatus})`;
@@ -283,14 +304,14 @@ export default function Home() {
                     </div>
                   )}
                   <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 mb-1 flex-none">
-                    <Image
-                      src="/chain-light.svg"
-                      alt="Network Logo"
-                      width={24}
-                      height={24}
-                      className="w-5 h-5 object-contain"
-                    />
-                    <span className="font-bold text-base text-white">XPL</span>
+                      <Image
+                        src="/chain-light.svg"
+                        alt="Network Logo"
+                        width={24}
+                        height={24}
+                        className="w-5 h-5 object-contain"
+                      />
+                      <span className="font-bold text-base text-white">FXRP</span>
                   </div>
                 </div>
                 <div className="text-[11px] text-muted-foreground flex justify-between mt-2 font-medium h-4">
@@ -329,16 +350,32 @@ export default function Home() {
                   <span>Status</span>
                   <span className="text-white">{taskStatusLabel}</span>
                 </div>
+                {activeTask && (
+                  <>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Client</span>
+                      <span className="font-mono text-white">{activeTask.client.slice(0, 6)}...{activeTask.client.slice(-4)}</span>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Agent</span>
+                      <span className="font-mono text-white">
+                        {activeTask.agent === '0x0000000000000000000000000000000000000000'
+                          ? 'Waiting...'
+                          : `${activeTask.agent.slice(0, 6)}...${activeTask.agent.slice(-4)}`}
+                      </span>
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between text-muted-foreground">
                   <span>Payment Deposited</span>
                   <span className={paymentDeposited ? 'text-green-400' : 'text-yellow-300'}>
                     {paymentDeposited ? 'Yes' : 'No'}
                   </span>
                 </div>
-                {activeTaskResultUri && (
+                {activeTask?.resultURI && (
                   <div className="break-all text-muted-foreground">
                     <span>Result URI: </span>
-                    <span className="text-white">{activeTaskResultUri}</span>
+                    <span className="text-white">{activeTask.resultURI}</span>
                   </div>
                 )}
                 {pollError && <p className="text-destructive">Polling error: {pollError}</p>}
@@ -348,6 +385,15 @@ export default function Home() {
                       ? agentResult
                       : JSON.stringify(agentResult, null, 2)}
                   </pre>
+                )}
+                {activeTask && (
+                  <TaskContestationActions
+                    task={activeTask}
+                    connectedAddress={address}
+                    agentResponseWindowSec={agentResponseWindowSec}
+                    disputeBondBps={disputeBondBps}
+                    onTaskUpdated={refreshActiveTask}
+                  />
                 )}
               </div>
             )}
@@ -369,7 +415,7 @@ export default function Home() {
                     : 'Select an Agent'}
               </button>
 
-              {activeTaskId !== null && activeTaskStatus === 2 && !paymentDeposited && (
+              {activeTaskId !== null && activeTaskStatus === TaskStatus.Accepted && !paymentDeposited && (
                 <button
                   onClick={handleDepositPayment}
                   disabled={isDepositing}
