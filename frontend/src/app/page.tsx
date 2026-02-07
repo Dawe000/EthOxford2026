@@ -10,10 +10,6 @@ import { useEscrowTiming } from '@/hooks/useEscrowTiming';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Settings, RefreshCw, ArrowDown } from 'lucide-react';
-import AutoGraphIcon from '@mui/icons-material/AutoGraph';
-import PsychologyIcon from '@mui/icons-material/Psychology';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import ScienceIcon from '@mui/icons-material/Science';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import DarkVeil from '@/components/ui/DarkVeil';
 import Image from 'next/image';
@@ -316,6 +312,9 @@ export default function Home() {
   const taskStatusLabel = activeTaskStatus === null
     ? 'No Active Task'
     : TASK_STATUS_LABELS[activeTaskStatus] || `Unknown (${activeTaskStatus})`;
+  const showCreateButton =
+    activeTaskId === null
+    || (activeTaskStatus !== null && TERMINAL_STATUSES.has(activeTaskStatus));
 
   return (
     <main className="h-screen w-full bg-[#0a0a0f] text-foreground flex flex-col overflow-hidden relative">
@@ -484,21 +483,23 @@ export default function Home() {
             )}
 
             <div className="mt-8 flex-none space-y-3">
-              <button
-                onClick={handleCreateTask}
-                disabled={!selectedAgentId || isCreating}
-                className={`w-full py-4 font-black text-lg rounded-2xl transition-all shadow-2xl ${
-                  selectedAgentId && !isCreating
-                    ? 'bg-primary hover:bg-primary/90 text-white shadow-primary/40 scale-[1.02]'
-                    : 'bg-white/10 text-muted-foreground cursor-not-allowed border border-white/5'
-                }`}
-              >
-                {isCreating
-                  ? 'Creating Task...'
-                  : selectedAgentId
-                    ? 'Create Task & Dispatch Agent'
-                    : 'Select an Agent'}
-              </button>
+              {showCreateButton && (
+                <button
+                  onClick={handleCreateTask}
+                  disabled={!selectedAgentId || isCreating}
+                  className={`w-full py-4 font-black text-lg rounded-2xl transition-all shadow-2xl ${
+                    selectedAgentId && !isCreating
+                      ? 'bg-primary hover:bg-primary/90 text-white shadow-primary/40 scale-[1.02]'
+                      : 'bg-white/10 text-muted-foreground cursor-not-allowed border border-white/5'
+                  }`}
+                >
+                  {isCreating
+                    ? 'Creating Task...'
+                    : selectedAgentId
+                      ? 'Create Task & Dispatch Agent'
+                      : 'Select an Agent'}
+                </button>
+              )}
 
               {activeTaskId !== null && activeTaskStatus === TaskStatus.Accepted && !paymentDeposited && (
                 <button
@@ -561,22 +562,6 @@ export default function Home() {
                 )}
               </div>
             </div>
-
-            {!query && !isLoading && (
-              <div className="mt-auto pt-6 grid grid-cols-4 gap-2 flex-none border-t border-white/10">
-                {[
-                  { icon: <AutoGraphIcon />, label: 'Sentiment' },
-                  { icon: <PsychologyIcon />, label: 'Predict' },
-                  { icon: <MonetizationOnIcon />, label: 'Yield' },
-                  { icon: <ScienceIcon />, label: 'Research' },
-                ].map((cat, i) => (
-                  <button key={i} className="flex flex-col items-center justify-center p-2 rounded-2xl hover:bg-white/10 transition-colors gap-2 text-muted-foreground hover:text-primary group">
-                    <div className="scale-75 group-hover:scale-100 transition-transform">{cat.icon}</div>
-                    <span className="text-[10px] font-bold uppercase tracking-tight">{cat.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
           </Card>
         </div>
       </div>

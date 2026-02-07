@@ -1,6 +1,10 @@
 import { TaskStatus, type Task } from '@sdk/types';
 import { isLikelyUri } from '@sdk/index';
 
+function taskStatus(task: Task): number {
+  return Number(task.status);
+}
+
 function sameAddress(a?: string | null, b?: string | null): boolean {
   if (!a || !b) return false;
   return a.toLowerCase() === b.toLowerCase();
@@ -34,7 +38,7 @@ export function canClientDispute(
   connectedAddress?: string | null
 ): boolean {
   if (!sameAddress(task.client, connectedAddress)) return false;
-  if (task.status !== TaskStatus.ResultAsserted) return false;
+  if (taskStatus(task) !== TaskStatus.ResultAsserted) return false;
   return toBigInt(nowSec) < task.cooldownEndsAt;
 }
 
@@ -45,7 +49,7 @@ export function canClientSettleConceded(
   connectedAddress?: string | null
 ): boolean {
   if (!sameAddress(task.client, connectedAddress)) return false;
-  if (task.status !== TaskStatus.DisputedAwaitingAgent) return false;
+  if (taskStatus(task) !== TaskStatus.DisputedAwaitingAgent) return false;
   const settleAt = task.cooldownEndsAt + toBigInt(agentResponseWindowSec);
   return toBigInt(nowSec) >= settleAt;
 }
@@ -57,7 +61,9 @@ export function getContestationTiming(
 ): ContestationTiming {
   const now = toBigInt(nowSec);
 
-  if (task.status === TaskStatus.ResultAsserted) {
+  const status = taskStatus(task);
+
+  if (status === TaskStatus.ResultAsserted) {
     const remaining = task.cooldownEndsAt - now;
     if (remaining > 0n) {
       return {
@@ -75,7 +81,7 @@ export function getContestationTiming(
     };
   }
 
-  if (task.status === TaskStatus.DisputedAwaitingAgent) {
+  if (status === TaskStatus.DisputedAwaitingAgent) {
     const settleAt = task.cooldownEndsAt + toBigInt(agentResponseWindowSec);
     const remaining = settleAt - now;
 
@@ -117,7 +123,7 @@ export function getDisputeEligibility(
     };
   }
 
-  if (task.status !== TaskStatus.ResultAsserted) {
+  if (taskStatus(task) !== TaskStatus.ResultAsserted) {
     return {
       enabled: false,
       reason: 'Dispute is only available while task is Result Asserted.',
@@ -166,7 +172,7 @@ export function getSettleEligibility(
     };
   }
 
-  if (task.status !== TaskStatus.DisputedAwaitingAgent) {
+  if (taskStatus(task) !== TaskStatus.DisputedAwaitingAgent) {
     return {
       enabled: false,
       reason: 'Settle Agent Conceded is only available while task is Disputed Awaiting Agent.',

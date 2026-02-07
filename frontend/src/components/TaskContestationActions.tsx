@@ -82,6 +82,7 @@ export function TaskContestationActions({
 
   const responseWindow = agentResponseWindowSec ?? 0n;
   const trimmedEvidenceUri = evidenceUri.trim();
+  const status = Number(task.status);
 
   const timing = useMemo(() => {
     return getContestationTiming(task, nowSec, responseWindow);
@@ -100,7 +101,7 @@ export function TaskContestationActions({
     return (task.paymentAmount * disputeBondBps) / 10000n;
   }, [task.paymentAmount, disputeBondBps]);
 
-  if (task.status !== TaskStatus.ResultAsserted && task.status !== TaskStatus.DisputedAwaitingAgent) {
+  if (status !== TaskStatus.ResultAsserted && status !== TaskStatus.DisputedAwaitingAgent) {
     return null;
   }
 
@@ -182,7 +183,7 @@ export function TaskContestationActions({
         Cooldown ends: <span className="font-mono text-orange-100">{formatTimestamp(task.cooldownEndsAt)}</span>
       </p>
 
-      {task.status === TaskStatus.ResultAsserted && (
+      {status === TaskStatus.ResultAsserted && (
         <div className="space-y-2">
           <Input
             value={evidenceUri}
@@ -203,7 +204,7 @@ export function TaskContestationActions({
         </div>
       )}
 
-      {task.status === TaskStatus.DisputedAwaitingAgent && (
+      {status === TaskStatus.DisputedAwaitingAgent && (
         <div className="space-y-2">
           <button
             onClick={handleSettleConceded}

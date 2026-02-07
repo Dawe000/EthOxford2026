@@ -97,4 +97,15 @@ describe('contestation helpers', () => {
     assert.equal(timing.deadlineUnix, 2500n);
     assert.equal(timing.secondsRemaining, 400);
   });
+
+  it('supports bigint status values from chain reads', () => {
+    const task = makeTask({
+      status: 3n as unknown as TaskStatus,
+      cooldownEndsAt: 3000n,
+    });
+    const eligibility = getDisputeEligibility(task, 2000n, task.client, 'ipfs://bafybeigdyrztst');
+
+    assert.equal(eligibility.enabled, true);
+    assert.equal(eligibility.reason, null);
+  });
 });

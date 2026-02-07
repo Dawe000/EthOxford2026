@@ -46,9 +46,9 @@ function formatTimestamp(seconds: bigint): string {
 
 function DataRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="grid grid-cols-[160px_1fr] gap-3 rounded-md bg-white/[0.03] px-3 py-2 text-[11px]">
+    <div className="grid w-full min-w-0 grid-cols-[160px_minmax(0,1fr)] gap-3 rounded-md bg-white/[0.03] px-3 py-2 text-[11px]">
       <span className="text-muted-foreground">{label}</span>
-      <span className="break-all font-mono text-white">{value}</span>
+      <span className="min-w-0 whitespace-pre-wrap break-all font-mono text-white">{value}</span>
     </div>
   );
 }
@@ -118,7 +118,7 @@ export function TaskActivity({ taskId }: { taskId: string }) {
       setResultError(null);
       return;
     }
-    if (task.status < TaskStatus.ResultAsserted) {
+    if (Number(task.status) < TaskStatus.ResultAsserted) {
       setResultBody(null);
       setResultError(null);
       return;
@@ -164,30 +164,31 @@ export function TaskActivity({ taskId }: { taskId: string }) {
 
   if (!task) return null;
 
-  const statusInfo = STATUS_MAP[task.status] || { label: 'Pending', color: 'text-gray-400', icon: Clock };
+  const status = Number(task.status);
+  const statusInfo = STATUS_MAP[status] || { label: 'Pending', color: 'text-gray-400', icon: Clock };
   const paymentTokenSymbol = (paymentTokenSymbolData as string | undefined) || 'TOKEN';
   const StatusIcon = statusInfo.icon;
   const normalizedAddress = address?.toLowerCase();
   const isTaskClient = Boolean(normalizedAddress && normalizedAddress === task.client.toLowerCase());
   const canDepositHere =
-    task.status === TaskStatus.Accepted &&
+    status === TaskStatus.Accepted &&
     paymentDeposited === false &&
     isTaskClient;
   const canNotifyHere =
-    task.status === TaskStatus.Accepted &&
+    status === TaskStatus.Accepted &&
     paymentDeposited === true &&
     isTaskClient;
 
   const depositDisabledReason = !isTaskClient
     ? 'Connect with the task client wallet to deposit.'
-    : task.status !== TaskStatus.Accepted
+    : status !== TaskStatus.Accepted
       ? 'Deposit is only available while task is Accepted.'
       : paymentDeposited
         ? 'Payment already deposited.'
         : 'Checking payment status...';
   const notifyDisabledReason = !isTaskClient
     ? 'Connect with the task client wallet to notify.'
-    : task.status !== TaskStatus.Accepted
+    : status !== TaskStatus.Accepted
       ? 'Notify is only available while task is Accepted.'
       : paymentDeposited
         ? null
@@ -242,7 +243,7 @@ export function TaskActivity({ taskId }: { taskId: string }) {
     <div className="group flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.03] p-3 backdrop-blur-md transition-all hover:border-white/10">
       <div className="flex items-center gap-3">
         <div className={`rounded-lg bg-background/50 p-2 ${statusInfo.color}`}>
-          <StatusIcon className={`h-4 w-4 ${task.status === TaskStatus.Accepted ? 'animate-spin' : ''}`} />
+          <StatusIcon className={`h-4 w-4 ${status === TaskStatus.Accepted ? 'animate-spin' : ''}`} />
         </div>
         <div>
           <div className="flex items-center gap-2 text-[10px] font-bold text-white">
@@ -267,7 +268,7 @@ export function TaskActivity({ taskId }: { taskId: string }) {
               <span>View</span>
             </button>
           </DialogTrigger>
-          <DialogContent className="max-h-[85vh] overflow-y-auto border-white/15 bg-[#0f1118] text-white sm:max-w-2xl">
+          <DialogContent className="max-h-[85vh] overflow-y-auto overflow-x-hidden border-white/15 bg-[#0f1118] text-white sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Task #{task.id.toString()} Details</DialogTitle>
               <DialogDescription className="text-xs text-slate-300">
@@ -325,7 +326,7 @@ export function TaskActivity({ taskId }: { taskId: string }) {
                 {resultError ? (
                   <p className="text-[10px] text-red-300">{resultError}</p>
                 ) : (
-                  <pre className="max-h-40 overflow-y-auto rounded-lg border border-white/10 bg-black/30 p-2 text-[10px] text-slate-200">
+                  <pre className="max-h-40 overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-all rounded-lg border border-white/10 bg-black/30 p-2 text-[10px] text-slate-200">
                     {typeof resultBody === 'string' ? resultBody : JSON.stringify(resultBody, null, 2)}
                   </pre>
                 )}

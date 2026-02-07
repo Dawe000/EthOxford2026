@@ -115,7 +115,7 @@ export function parseTask(raw: {
   createdAt: bigint;
   deadline: bigint;
   cooldownEndsAt: bigint;
-  status: number;
+  status: number | bigint;
   resultHash: string;
   agentSignature: string;
   clientDisputeBond: bigint;
@@ -137,7 +137,7 @@ export function parseTask(raw: {
     createdAt: raw.createdAt,
     deadline: raw.deadline,
     cooldownEndsAt: raw.cooldownEndsAt,
-    status: raw.status as TaskStatus,
+    status: Number(raw.status) as TaskStatus,
     resultHash: raw.resultHash,
     agentSignature: raw.agentSignature,
     clientDisputeBond: raw.clientDisputeBond,
@@ -160,7 +160,7 @@ function parseLegacyTask(raw: {
   createdAt: bigint;
   deadline: bigint;
   cooldownEndsAt: bigint;
-  status: number;
+  status: number | bigint;
   resultHash: string;
   agentSignature: string;
   clientDisputeBond: bigint;
@@ -183,7 +183,7 @@ function parseLegacyTask(raw: {
     createdAt: raw.createdAt,
     deadline: raw.deadline,
     cooldownEndsAt: raw.cooldownEndsAt,
-    status: raw.status as TaskStatus,
+    status: Number(raw.status) as TaskStatus,
     resultHash: raw.resultHash,
     agentSignature: raw.agentSignature,
     clientDisputeBond: raw.clientDisputeBond,
