@@ -91,3 +91,23 @@ Cron-triggered worker that resolves UMA disputes for AgentTaskEscrow:
 # Health check
 curl https://dvm-agent.<subdomain>.workers.dev/health
 ```
+
+### End-to-end test (create dispute, DVM resolves)
+
+1. **Create dispute onchain** (from contracts):
+   ```bash
+   cd contracts && npm run testnet:flow:path-b-uma-escalate
+   ```
+   This creates task → accepts → deposits → asserts → disputes → escalates to UMA. It stops there (does not pushResolution).
+
+2. **Wait 3 minutes** (UMA liveness = 180s).
+
+3. **Run DVM worker and trigger cron**:
+   ```bash
+   cd dvm-agent && npm run dev -- --test-scheduled
+   ```
+   Then in another terminal:
+   ```bash
+   curl "http://localhost:8787/__scheduled?cron=*+*+*+*+*"
+   ```
+   The DVM will fetch the escalated dispute, call Venice, and pushResolution.

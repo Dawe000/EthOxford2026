@@ -15,6 +15,9 @@ export interface Env {
   ESCROW_ADDRESS?: string;
   MOCK_OOv3_ADDRESS?: string;
   DEPLOYMENT_BLOCK?: string;
+  IPFS_GATEWAY?: string;
+  /** When set, use Pinata gateway (better for content pinned via Pinata) */
+  PINATA_JWT?: string;
   ENVIRONMENT?: string;
 }
 
@@ -70,6 +73,8 @@ export default {
       DEPLOYMENT_BLOCK: env.DEPLOYMENT_BLOCK
         ? parseInt(env.DEPLOYMENT_BLOCK, 10)
         : Number(PLASMA_TESTNET_DEFAULTS.deploymentBlock),
+      IPFS_GATEWAY: env.IPFS_GATEWAY,
+      PINATA_JWT: env.PINATA_JWT,
     };
 
     ctx.waitUntil(

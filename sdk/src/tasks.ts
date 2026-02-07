@@ -255,6 +255,48 @@ export async function getTaskDescriptionUri(
   return args.descriptionURI ?? null;
 }
 
+/** Escalated dispute info from TaskDisputeEscalated event */
+export interface EscalatedDispute {
+  taskId: bigint;
+  assertionId: string;
+  blockNumber: number;
+}
+
+/** Fetch escalated disputes from TaskDisputeEscalated events (fromBlock to toBlock). Event-based - 1-2 eth_getLogs instead of O(nextTaskId) getTask calls. */
+export async function getEscalatedDisputes(
+  escrowAddress: string,
+  provider: Provider,
+  fromBlock: number | bigint,
+  toBlock?: number | bigint
+): Promise<EscalatedDispute[]> {
+  const escrow = getEscrowContract(escrowAddress, provider);
+  const filter = escrow.filters.TaskDisputeEscalated?.();
+  if (!filter) return [];
+  const start = BigInt(fromBlock);
+  const end =
+    toBlock !== undefined
+      ? BigInt(toBlock)
+      : BigInt(await provider.getBlockNumber());
+  if (start > end) return [];
+  const events =
+    end - start <= BigInt(LOG_CHUNK_SIZE)
+      ? await escrow.queryFilter(filter, start, end)
+      : await queryFilterChunked(escrow, filter, start, provider);
+  return events
+    .filter((e): e is typeof e & { blockNumber: number } => e.blockNumber != null && BigInt(e.blockNumber) <= end)
+    .map((e) => {
+      const args = ("args" in e && e.args) as
+        | { taskId?: bigint; assertionId?: string }
+        | undefined;
+      return {
+        taskId: args?.taskId ?? 0n,
+        assertionId: args?.assertionId ?? "0x",
+        blockNumber: e.blockNumber,
+      };
+    })
+    .filter((d) => d.taskId !== 0n && d.assertionId !== "0x");
+}
+
 /** Fetch block number when task was escalated to UMA. Returns null if no TaskDisputeEscalated event. */
 export async function getEscalationBlockForTask(
   escrowAddress: string,
