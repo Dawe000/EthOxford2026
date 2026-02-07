@@ -1,13 +1,13 @@
 import type { Signer } from "ethers";
-import type { SDKConfig } from "./config.js";
-import type { Task } from "./types.js";
+import type { SDKConfig } from "./config";
+import type { Task } from "./types";
 import {
   getEscrowContract,
   parseTask,
   ensureAllowance,
-} from "./contract.js";
-import { calculateResultHash, signTaskResult } from "./crypto.js";
-import { uploadJson } from "./ipfs.js";
+} from "./contract";
+import { calculateResultHash, signTaskResult } from "./crypto";
+import { uploadJson } from "./ipfs";
 
 export class AgentSDK {
   constructor(

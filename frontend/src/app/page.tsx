@@ -15,14 +15,62 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import HubIcon from '@mui/icons-material/Hub';
 import DarkVeil from '@/components/ui/DarkVeil';
 import Image from 'next/image';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAgentSDK } from '@/hooks/useAgentSDK';
+import { MOCK_TOKEN_ADDRESS, ESCROW_ADDRESS } from '@/config/constants';
+import { parseEther, formatEther } from 'ethers';
+import { useAccount, useReadContract } from 'wagmi';
 
 export default function Home() {
+  const { address } = useAccount();
   const [query, setQuery] = useState('');
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState('0.1');
   const { data: agents, isLoading, error } = useAgentMatching(query);
+  const sdk = useAgentSDK();
 
-  const handleCreateTask = () => {
-    alert('Wallet connection needed for task creation (Phase 2)');
+  // Fetch balance
+  const { data: balance } = useReadContract({
+    address: MOCK_TOKEN_ADDRESS as `0x${string}`,
+    abi: [
+      {
+        name: 'balanceOf',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [{ name: 'account', type: 'address' }],
+        outputs: [{ name: '', type: 'uint256' }],
+      },
+    ],
+    functionName: 'balanceOf',
+    args: address ? [address as `0x${string}`] : undefined,
+    query: {
+      enabled: !!address,
+    }
+  });
+
+  const handleCreateTask = async () => {
+    if (!sdk || !query) return;
+    try {
+      // 1. Create task on-chain
+      // We pass the query as the description for now. 
+      // In a real app, we'd upload a full spec to IPFS.
+      const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+      const taskId = await sdk.client.createTask(
+        query,
+        MOCK_TOKEN_ADDRESS,
+        parseEther(paymentAmount),
+        deadline
+      );
+      
+      alert(`Task created! ID: ${taskId}. Now depositing payment...`);
+
+      // 2. Deposit payment
+      await sdk.client.depositPayment(taskId);
+      alert('Payment deposited successfully! The agent can now start working.');
+    } catch (err: any) {
+      console.error('Task creation failed:', err);
+      alert(`Error: ${err.message || 'Unknown error'}`);
+    }
   };
 
   return (
@@ -48,12 +96,10 @@ export default function Home() {
           <span className="text-lg font-bold tracking-tight text-white">EthOxford<span className="text-primary">Agents</span></span>
         </div>
         <div className="hidden md:flex gap-1 p-1 bg-white/5 rounded-full border border-white/10">
-          <button className="px-4 py-1.5 rounded-full bg-white/10 text-white font-medium text-xs shadow-sm transition-all">Exchange</button>
+          <button className="px-4 py-1.5 rounded-full bg-white/10 text-white font-medium text-xs transition-all">Exchange</button>
           <button className="px-4 py-1.5 rounded-full hover:bg-white/5 text-muted-foreground font-medium text-xs transition-all">Portfolio</button>
         </div>
-        <button className="px-5 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-full font-semibold text-sm transition-all shadow-lg shadow-primary/20">
-          Connect Wallet
-        </button>
+        <ConnectButton />
       </nav>
 
       {/* Main Content Container */}
@@ -89,8 +135,13 @@ export default function Home() {
               <div className="bg-white/[0.05] rounded-3xl p-6 border border-white/10 flex-1 flex flex-col justify-center">
                 <label className="text-[10px] font-bold text-muted-foreground mb-1 block uppercase tracking-widest">Estimated Cost</label>
                 <div className="flex justify-between items-end">
-                  <span className="text-5xl font-black text-white tracking-tighter">0.00</span>
-                  <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 mb-1">
+                  <input 
+                    type="text" 
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    className="text-5xl font-black text-white tracking-tighter bg-transparent border-none outline-none w-full"
+                  />
+                  <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 mb-1 flex-none">
                       <Image 
                         src="/ethereum-eth-logo.svg" 
                         alt="Ethereum Logo" 
@@ -102,8 +153,8 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="text-[11px] text-muted-foreground flex justify-between mt-2 font-medium">
-                  <span>$0.00 USD</span>
-                  <span>Balance: 0.00 ETH</span>
+                  <span>~ ${(parseFloat(paymentAmount) * 2500 || 0).toLocaleString()} USD</span>
+                  <span>Balance: {balance ? parseFloat(formatEther(balance as bigint)).toFixed(4) : '0.00'} TST</span>
                 </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 import { keccak256, toUtf8Bytes, getBytes } from "ethers";
-import type { IpfsConfig } from "./config.js";
-import { DEFAULT_IPFS_URI_SCHEME } from "./config.js";
+import type { IpfsConfig } from "./config";
+import { DEFAULT_IPFS_URI_SCHEME } from "./config";
 
 /** Mock CID from content hash - same content = same URI, no network calls */
 function mockCid(content: string | Uint8Array): string {
@@ -82,7 +82,7 @@ async function pinFile(
   content: Blob | Uint8Array,
   config: IpfsConfig
 ): Promise<string> {
-  const blob = content instanceof Blob ? content : new Blob([content]);
+  const blob = content instanceof Blob ? content : new Blob([content as any]);
 
   if (config.provider === "mock") {
     const buf =
