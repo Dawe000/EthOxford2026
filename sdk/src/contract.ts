@@ -15,6 +15,7 @@ const ESCROW_ABI: InterfaceAbi = [
   "function disputeBondBps() external view returns (uint256)",
   "function escalationBondBps() external view returns (uint256)",
   "function paymentDeposited(uint256 taskId) external view returns (bool)",
+  "function allowedTokens(address) external view returns (bool)",
   "function umaConfig() external view returns (tuple(address oracle, uint64 liveness, bytes32 identifier, uint256 minimumBond))",
   "function createTask(string calldata descriptionURI, address paymentToken, uint256 paymentAmount, uint256 deadline, address stakeToken) external returns (uint256 taskId)",
   "function acceptTask(uint256 taskId, uint256 stakeAmount) external",
@@ -44,6 +45,16 @@ export function getEscrowContract(
   signerOrProvider: Signer | Provider
 ): Contract {
   return new Contract(address, ESCROW_ABI, signerOrProvider);
+}
+
+/** Check whether a token is in the escrow's allowed (whitelist) set. Provider-only. */
+export async function getTokenAllowed(
+  escrowAddress: string,
+  provider: Provider,
+  tokenAddress: string
+): Promise<boolean> {
+  const escrow = getEscrowContract(escrowAddress, provider);
+  return escrow.allowedTokens(tokenAddress);
 }
 
 /** ERC20 contract wrapper */

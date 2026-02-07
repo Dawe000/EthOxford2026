@@ -32,7 +32,13 @@ export {
   fetchTaskEvidence,
 } from "./ipfs";
 export { matchAgents } from "./marketmaker";
-export { getEscrowContract, getErc20Contract, parseTask, ensureAllowance } from "./contract";
+export {
+  getEscrowContract,
+  getErc20Contract,
+  parseTask,
+  ensureAllowance,
+  getTokenAllowed,
+} from "./contract";
 export type { TaskAction, EscrowTimingConfig, EscrowConfig, EscalatedDispute } from "./tasks";
 export {
   depositToVault,
