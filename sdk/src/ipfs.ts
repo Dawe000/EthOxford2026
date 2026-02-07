@@ -161,7 +161,7 @@ async function pinFile(
   content: Blob | Uint8Array,
   config: IpfsConfig
 ): Promise<string> {
-  const blob = content instanceof Blob ? content : new Blob([content]);
+  const blob = content instanceof Blob ? content : new Blob([content as any]);
 
   if (config.provider === "mock") {
     const buf =

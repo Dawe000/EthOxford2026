@@ -1,6 +1,6 @@
 import type { Signer } from "ethers";
-import type { SDKConfig } from "./config.js";
-import type { Task } from "./types.js";
+import type { SDKConfig } from "./config";
+import type { Task } from "./types";
 import {
   getEscrowContract,
   parseTask,
