@@ -57,7 +57,7 @@ const agentSdk = new AgentSDK(config, wallet);
 
 | Method | Description |
 |--------|-------------|
-| `createTask(descriptionUriOrSpec, paymentToken, paymentAmount, deadline)` | Create task. Pass URI (ipfs://, https://), plain text, or JSON spec. Plain text and JSON upload to IPFS (requires `config.ipfs`). |
+| `createTask(descriptionUriOrSpec, paymentToken, paymentAmount, deadline, stakeToken?)` | Create task. Pass URI (ipfs://, https://), plain text, or JSON spec. Optional `stakeToken`: when set, agent stakes in this token (default: payment token). |
 | `depositPayment(taskId)` | Deposit payment (approves token if needed). |
 | `disputeTask(taskId, evidenceUriOrObject)` | Dispute asserted result. |
 | `settleAgentConceded(taskId)` | Settle when agent conceded (no UMA escalation). |

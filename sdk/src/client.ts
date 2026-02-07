@@ -44,12 +44,14 @@ export class ClientSDK {
   /**
    * Create task. Pass descriptionURI string (ipfs://, https://, etc.), plain text to upload to IPFS,
    * or spec object to upload to IPFS. Plain text and spec require config.ipfs.
+   * Optional stakeToken: when set, agent stakes in this token (default: paymentToken).
    */
   async createTask(
     descriptionUriOrSpec: string | Record<string, unknown>,
     paymentToken: string,
     paymentAmount: bigint,
-    deadline: number | bigint
+    deadline: number | bigint,
+    stakeToken?: string
   ): Promise<bigint> {
     let uri: string;
     if (typeof descriptionUriOrSpec === "string") {
@@ -70,11 +72,13 @@ export class ClientSDK {
 
     const escrow = getEscrowContract(this.config.escrowAddress, this.signer);
     const nextId = await escrow.nextTaskId();
+    const stakeTokenAddr = stakeToken ?? "0x0000000000000000000000000000000000000000";
     await (await escrow.createTask(
       uri,
       paymentToken,
       paymentAmount,
-      BigInt(deadline)
+      BigInt(deadline),
+      stakeTokenAddr
     )).wait();
     return nextId;
   }
