@@ -3,25 +3,38 @@
  * Requires: MNEMONIC in .env, funded addresses, deployed contracts.
  *
  * npm run testnet:flow [path]
- *   path: path-a (default) | path-c | path-d
+ *   path: path-a | path-b-concede | path-b-uma-agent | path-b-uma-client | path-c | path-d
  */
 import "dotenv/config";
 import { ethers } from "ethers";
 import { ClientSDK, AgentSDK } from "@erc8001/agent-task-sdk";
 import * as fs from "fs";
 import * as path from "path";
+import { TESTNET_CONFIG } from "../config/testnet";
 
 const COOLDOWN_SECONDS = 180;
+const AGENT_RESPONSE_WINDOW_SECONDS = TESTNET_CONFIG.AGENT_RESPONSE_WINDOW; // 5 min
+const UMA_LIVENESS_SECONDS = TESTNET_CONFIG.UMA_LIVENESS; // 3 min
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const pathArg = (process.env.FLOW_PATH ?? process.argv[process.argv.length - 1]) || "path-a";
-if (!["path-a", "path-c", "path-d"].includes(pathArg)) {
-  console.error("Usage: npm run testnet:flow  (default: path-a)");
-  console.error("       FLOW_PATH=path-c npm run testnet:flow");
-  console.error("       FLOW_PATH=path-d npm run testnet:flow");
+const VALID_PATHS = [
+  "path-a",
+  "path-b-concede",
+  "path-b-uma-agent",
+  "path-b-uma-client",
+  "path-c",
+  "path-d",
+];
+const rawPath = process.env.FLOW_PATH ?? process.argv.find((a) => a.startsWith("path-"));
+let pathArg: string;
+if (!rawPath || VALID_PATHS.includes(rawPath)) {
+  pathArg = rawPath ?? "path-a";
+} else {
+  console.error("Invalid path:", rawPath);
+  console.error("Valid: path-a | path-b-concede | path-b-uma-agent | path-b-uma-client | path-c | path-d");
   process.exit(1);
 }
 
@@ -94,6 +107,84 @@ async function main() {
     const delta = (await token.balanceOf(agent.address)) - balanceBefore;
     console.log("Path A complete. Agent received:", ethers.formatEther(delta), "TST");
     if (delta !== paymentAmount + stakeAmount) throw new Error(`Expected ${paymentAmount + stakeAmount}, got ${delta}`);
+  } else if (pathArg === "path-b-concede") {
+    const deadline = Math.floor(Date.now() / 1000) + 86400;
+    console.log("1. Client creates task...");
+    const taskId = await clientSdk.createTask("ipfs://description", tokenAddr, paymentAmount, deadline);
+    console.log("   TaskId:", taskId.toString());
+
+    console.log("2. Agent accepts task...");
+    await agentSdk.acceptTask(taskId, stakeAmount);
+    console.log("   Done");
+
+    console.log("3. Client deposits payment...");
+    await clientSdk.depositPayment(taskId);
+    console.log("   Done");
+
+    console.log("4. Agent asserts completion...");
+    await agentSdk.assertCompletion(taskId, "Task completed successfully");
+    console.log("   Done");
+
+    console.log("5. Client disputes...");
+    await clientSdk.disputeTask(taskId, "ipfs://client-evidence");
+    console.log("   Done");
+
+    console.log(`6. Waiting ${AGENT_RESPONSE_WINDOW_SECONDS}s for agent response window...`);
+    await sleep(AGENT_RESPONSE_WINDOW_SECONDS * 1000);
+
+    const disputeBond = (paymentAmount * 100n) / 10000n;
+    const balanceBefore = await token.balanceOf(client.address);
+    console.log("7. Client settles (agent conceded)...");
+    await clientSdk.settleAgentConceded(taskId);
+    const delta = (await token.balanceOf(client.address)) - balanceBefore;
+    console.log("Path B (concede) complete. Client received:", ethers.formatEther(delta), "TST");
+    if (delta !== paymentAmount + disputeBond + stakeAmount) {
+      throw new Error(`Expected ${paymentAmount + disputeBond + stakeAmount}, got ${delta}`);
+    }
+  } else if (pathArg === "path-b-uma-agent" || pathArg === "path-b-uma-client") {
+    const agentWins = pathArg === "path-b-uma-agent";
+    const deadline = Math.floor(Date.now() / 1000) + 86400;
+    console.log("1. Client creates task...");
+    const taskId = await clientSdk.createTask("ipfs://description", tokenAddr, paymentAmount, deadline);
+    console.log("   TaskId:", taskId.toString());
+
+    console.log("2. Agent accepts task...");
+    await agentSdk.acceptTask(taskId, stakeAmount);
+    console.log("   Done");
+
+    console.log("3. Client deposits payment...");
+    await clientSdk.depositPayment(taskId);
+    console.log("   Done");
+
+    console.log("4. Agent asserts completion...");
+    await agentSdk.assertCompletion(taskId, "Task completed successfully");
+    console.log("   Done");
+
+    console.log("5. Client disputes...");
+    await clientSdk.disputeTask(taskId, "ipfs://client-evidence");
+    console.log("   Done");
+
+    console.log("6. Agent escalates to UMA...");
+    await agentSdk.escalateToUMA(taskId, "ipfs://agent-evidence");
+    const task = await clientSdk.getTask(taskId);
+    const assertionId = task.umaAssertionId;
+    console.log("   AssertionId:", assertionId);
+
+    console.log(`7. Waiting ${UMA_LIVENESS_SECONDS}s for UMA liveness...`);
+    await sleep(UMA_LIVENESS_SECONDS * 1000);
+
+    const mockOOv3Addr = deployment.contracts.MockOOv3;
+    const mockOOv3 = new ethers.Contract(
+      mockOOv3Addr,
+      ["function pushResolution(bytes32 assertionId, bool assertedTruthfully) external"],
+      agent
+    );
+    console.log("8. Resolving via MockOOv3 (agent wins:", agentWins, ")...");
+    await (await mockOOv3.pushResolution(assertionId, agentWins)).wait();
+
+    const taskAfter = await clientSdk.getTask(taskId);
+    if (taskAfter.status !== 8) throw new Error("Expected task status Resolved (8), got " + taskAfter.status);
+    console.log("Path B (UMA, " + (agentWins ? "agent" : "client") + " wins) complete.");
   } else if (pathArg === "path-c") {
     const deadline = Math.floor(Date.now() / 1000) - 60; // already passed
     console.log("1. Client creates task (deadline in past)...");

@@ -39,10 +39,27 @@ npm run deploy:sandbox
 **RPC:** https://testnet-rpc.plasma.to  
 **Explorer:** https://testnet.plasmascan.to
 
-**Run Path A flow on testnet:**
+**Run flows on testnet:**
 ```bash
+# Path A – happy path (default)
 npm run testnet:flow
+# or: npm run testnet:flow:path-a
+
+# Path B – dispute, agent concedes (~5 min wait)
+npm run testnet:flow:path-b-concede
+
+# Path B – dispute, UMA resolution (agent wins) (~3 min wait)
+npm run testnet:flow:path-b-uma-agent
+
+# Path B – dispute, UMA resolution (client wins) (~3 min wait)
+npm run testnet:flow:path-b-uma-client
+
+# Path C – timeout cancellation
+npm run testnet:flow:path-c
+
+# Path D – agent cannot complete
+npm run testnet:flow:path-d
 ```
-Runs createTask -> acceptTask -> depositPayment -> assertCompletion -> (3 min wait) -> settleNoContest. Add `PINATA_JWT` to `.env` for IPFS uploads when using spec/evidence objects.
+Add `PINATA_JWT` to `.env` for IPFS uploads when using spec/evidence objects.
 
 See `docs/TECHNICAL_SPEC.md` for interface definitions.
