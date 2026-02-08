@@ -17,6 +17,7 @@ import {
   ClientSDK,
   AgentSDK,
   getPlasmaTestnetConfig,
+  getEscrowConfig,
 } from "@erc8001/agent-task-sdk";
 import * as fs from "fs";
 import { TESTNET_CONFIG } from "../../config/testnet";
@@ -103,11 +104,15 @@ async function main() {
   const stakeAmount = STAKE_AMOUNT;
   const token = new ethers.Contract(
     tokenAddr,
-    ["function balanceOf(address) view returns (uint256)"],
+    [
+      "function balanceOf(address) view returns (uint256)",
+      "function transfer(address to, uint256 amount) returns (bool)",
+    ],
     provider
   );
 
   console.log(pathArg.toUpperCase(), "on Plasma testnet");
+  console.log("  Escrow:", config.escrowAddress);
   console.log("  Client:", await client.getAddress());
   console.log("  Agent:", await agent.getAddress());
   console.log("");
@@ -200,6 +205,31 @@ async function main() {
     console.log("5. Client disputes (uploading evidence to IPFS)...");
     await clientSdk.disputeTask(taskId, { reason: "Client disputes: task was not completed correctly" });
     console.log("   Done");
+
+    // Escalation bond = max(1% of payment, umaConfig.minimumBond). With 6-decimal USDT0, minimumBond=1e18 => 1e12 USDT (impossible). Fund agent if bond is achievable.
+    const taskForBond = await clientSdk.getTask(taskId);
+    const escrowCfg = await getEscrowConfig(config.escrowAddress!, provider);
+    const computedBond = (taskForBond.paymentAmount * escrowCfg.escalationBondBps) / 10000n;
+    const requiredBond =
+      computedBond > escrowCfg.umaConfig.minimumBond
+        ? computedBond
+        : escrowCfg.umaConfig.minimumBond;
+    if (requiredBond >= 10n ** 15n) {
+      throw new Error(
+        `Escalation bond is ${requiredBond} raw (minimumBond=${escrowCfg.umaConfig.minimumBond}). ` +
+          `For 6-decimal USDT0 this is too large. Set UMA_MINIMUM_BOND to 1e6 in contracts/config/testnet.ts and redeploy escrow.`
+      );
+    }
+    const agentBalance = await token.balanceOf(agent.address);
+    if (agentBalance < requiredBond) {
+      const shortfall = requiredBond - agentBalance;
+      console.log(
+        `   Funding agent with ${ethers.formatUnits(shortfall, USDT0_DECIMALS)} USDT0 for escalation bond...`
+      );
+      const tokenWithClient = token.connect(client) as ethers.Contract;
+      const tx = await tokenWithClient.transfer(agent.address, shortfall);
+      await tx.wait();
+    }
 
     console.log("6. Agent escalates to UMA (uploading evidence to IPFS)...");
     await agentSdk.escalateToUMA(taskId, { reason: "Agent claims task was completed as specified" });

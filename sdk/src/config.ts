@@ -7,13 +7,13 @@ export const PLASMA_TESTNET_USDT = "0x502012b361AebCE43b26Ec812B74D9a51dB4D412" 
 
 /** Default Plasma testnet (chainId 9746) deployment – USDT0-only escrow */
 export const PLASMA_TESTNET_DEFAULTS = {
-  escrowAddress: "0x86A6CEb453C966ED40892B6332899B2195240448" as const,
+  escrowAddress: "0xFf4e2165f2B30e3f7e25118148C3f7b53895F513" as const,
   mockTokenAddress: PLASMA_TESTNET_USDT,
-  mockOOv3Address: "0x18EB91e9d1c08764804109f0129b7e4f7928278B" as const,
+  mockOOv3Address: "0x7Aa7562D8e62047fAfa185937C39436051565e73" as const,
   chainId: 9746,
   rpcUrl: "https://testnet-rpc.plasma.to",
   /** Escrow deployment block - used to limit eth_getLogs range on RPCs with 10k block limit (Plasma) */
-  deploymentBlock: 14699092,
+  deploymentBlock: 14701053,
 } as const;
 
 /** Default Coston2 testnet (chainId 114) deployment addresses for Firelight integration */

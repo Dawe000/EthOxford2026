@@ -117,12 +117,14 @@ npm run testnet:flow:path-a
 - 24hr cooldown
 - Settlement (agent receives payment + stake back)
 
-### Path B: Client Dispute
-- Client creates task
-- Agent accepts with stake
-- Agent asserts completion
-- Client disputes within cooldown
-- Client wins (receives payment back + slashed stake)
+### Path B: Client Dispute (no UMA)
+- `npm run testnet:flow:path-b-concede` – client disputes, agent does nothing, after response window client calls `settleAgentConceded`. No DVM.
+
+### Path B: UMA escalation (test DVM)
+- `npm run testnet:flow:path-b-uma-escalate` – client disputes, agent escalates to UMA, then **DVM worker** (cron) resolves via `pushResolution`. Requires:
+  - **PINATA_JWT** in `contracts/.env` or `sdk/.env` (IPFS uploads for dispute/evidence).
+  - **Agent** must have USDT0 for **escalation bond**: `max(1% of payment, umaConfig.minimumBond)`. Current testnet escrow uses `minimumBond = 1e18` (for 18‑decimal tokens). With **USDT0 (6 decimals)** that is 1e18 raw = 1e12 USDT, so escalation will fail unless you redeploy escrow with a lower `UMA_MINIMUM_BOND` (e.g. `1e6` = 1 USDT in 6 decimals).
+- After the script escalates, ensure the **DVM worker** is deployed and its cron runs (or trigger manually); it will call `pushResolution` on MockOOv3. The script polls until task status is Resolved (or 10 min timeout).
 
 ### Path C: UMA Escalation
 - Client creates task

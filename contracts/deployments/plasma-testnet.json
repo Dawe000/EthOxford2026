@@ -2,13 +2,13 @@
   "chainId": 9746,
   "network": "plasma-testnet",
   "contracts": {
-    "MockOOv3": "0x18EB91e9d1c08764804109f0129b7e4f7928278B",
-    "AgentTaskEscrow": "0x86A6CEb453C966ED40892B6332899B2195240448"
+    "MockOOv3": "0x7Aa7562D8e62047fAfa185937C39436051565e73",
+    "AgentTaskEscrow": "0xFf4e2165f2B30e3f7e25118148C3f7b53895F513"
   },
   "sdk": {
-    "escrowAddress": "0x86A6CEb453C966ED40892B6332899B2195240448",
+    "escrowAddress": "0xFf4e2165f2B30e3f7e25118148C3f7b53895F513",
     "mockTokenAddress": "0x502012b361AebCE43b26Ec812B74D9a51dB4D412",
     "rpcUrl": "https://testnet-rpc.plasma.to",
-    "deploymentBlock": 14699092
+    "deploymentBlock": 14701053
   }
 }
