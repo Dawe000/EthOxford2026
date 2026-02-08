@@ -421,6 +421,11 @@ export default function Home() {
           <Link href="/activity">
             <button className="px-4 py-1.5 rounded-full hover:bg-white/5 text-muted-foreground font-medium text-xs transition-all">Activity</button>
           </Link>
+          {isPlasmaChain && (
+            <Link href="/plasma">
+              <button className="px-4 py-1.5 rounded-full hover:bg-primary/10 text-muted-foreground hover:text-primary font-bold text-xs transition-all">Plasma Flow</button>
+            </Link>
+          )}
           {isCoston2Chain && (
             <Link href="/fassets">
               <button className="px-4 py-1.5 rounded-full hover:bg-[#fbcfe8]/10 text-muted-foreground hover:text-[#fbcfe8] font-bold text-xs transition-all">FAssets Flow</button>
