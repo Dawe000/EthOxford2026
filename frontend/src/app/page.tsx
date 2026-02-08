@@ -469,86 +469,120 @@ export default function Home() {
           <Card className="flex flex-col p-8 bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-2xl rounded-[2.5rem] relative overflow-hidden h-full">
             <div className="flex justify-between items-center mb-6 flex-none">
               <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold tracking-tight text-white">Request Task</h2>
+                <h2 className="text-2xl font-bold tracking-tight text-white">
+                  {hasResultGenerated ? 'Task Outcome' : 'Request Task'}
+                </h2>
               </div>
               <button className="p-1.5 hover:bg-white/10 rounded-full transition-colors">
                 <Settings className="text-muted-foreground w-5 h-5" />
               </button>
             </div>
 
-            <div className={`flex-1 flex flex-col gap-3 relative min-h-0 pr-2 ${hasRequestLowerContent ? 'overflow-y-auto' : ''}`}>
-              <div className={`bg-white/[0.05] rounded-3xl p-6 border border-white/10 hover:border-primary/40 transition-colors ${hasRequestLowerContent ? 'flex-none' : 'flex-1 min-h-0 flex flex-col'}`}>
-                <label className="text-[10px] font-bold text-muted-foreground mb-3 block uppercase tracking-widest">Task Description</label>
-                <TaskSearchBox
-                  onSearch={setQuery}
-                  readOnly={isTaskInProgress}
-                  expanded={!hasRequestLowerContent}
-                />
-              </div>
-
-              <div className={`bg-white/[0.05] rounded-3xl p-6 border border-white/10 ${hasRequestLowerContent ? 'flex-none' : 'flex-1 min-h-0'}`}>
-                <label className="text-[10px] font-bold text-muted-foreground mb-1 block uppercase tracking-widest">Estimated Cost</label>
-                <div className="flex justify-between items-end">
-                  {selectedAgentId ? (
-                    <input
-                      type="text"
-                      value={paymentAmount}
-                      onChange={(e) => setPaymentAmount(e.target.value)}
-                      className="text-5xl font-black text-white tracking-tighter bg-transparent border-none outline-none w-full animate-in fade-in slide-in-from-left-2"
+            <div className={`flex-1 flex flex-col gap-3 relative min-h-0 pr-2 custom-scrollbar overflow-y-auto`}>
+              {!hasResultGenerated ? (
+                <>
+                  <div className={`bg-white/[0.05] rounded-3xl p-6 border border-white/10 hover:border-primary/40 transition-colors ${hasRequestLowerContent ? 'flex-none' : 'flex-1 min-h-0 flex flex-col'}`}>
+                    <label className="text-[10px] font-bold text-muted-foreground mb-3 block uppercase tracking-widest">Task Description</label>
+                    <TaskSearchBox
+                      onSearch={setQuery}
+                      readOnly={isTaskInProgress}
+                      expanded={!hasRequestLowerContent}
                     />
-                  ) : (
-                    <div className="text-2xl font-bold text-white/20 tracking-tight h-[60px] flex items-center">
-                      Search & Select Agent...
+                  </div>
+
+                  <div className={`bg-white/[0.05] rounded-3xl p-6 border border-white/10 ${hasRequestLowerContent ? 'flex-none' : 'flex-1 min-h-0'}`}>
+                    <label className="text-[10px] font-bold text-muted-foreground mb-1 block uppercase tracking-widest">Estimated Cost</label>
+                    <div className="flex justify-between items-end">
+                      {selectedAgentId ? (
+                        <input
+                          type="text"
+                          value={paymentAmount}
+                          onChange={(e) => setPaymentAmount(e.target.value)}
+                          className="text-5xl font-black text-white tracking-tighter bg-transparent border-none outline-none w-full animate-in fade-in slide-in-from-left-2"
+                        />
+                      ) : (
+                        <div className="text-2xl font-bold text-white/20 tracking-tight h-[60px] flex items-center">
+                          Search & Select Agent...
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 mb-1 flex-none">
+                          <Image
+                            src={networkLogo}
+                            alt="Network Logo"
+                            width={24}
+                            height={24}
+                            className="w-5 h-5 object-contain"
+                          />
+                          <span className="font-bold text-base text-white">{paymentTokenSymbol}</span>
+                      </div>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground flex justify-between mt-2 font-medium h-4">
+                      {selectedAgentId ? (
+                        <>
+                          <span>~ ${(parseFloat(paymentAmount) * 2500 || 0).toLocaleString()} USD</span>
+                          <span>
+                            Balance: {balance ? parseFloat(formatUnits(balance as bigint, paymentTokenDecimals)).toFixed(4) : '0.00'} {paymentTokenSymbol}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="opacity-50 italic text-[9px]">Awaiting selection to calculate fees...</span>
+                      )}
+                    </div>
+
+                    {selectedAgentId && (
+                      <TaskConfigForm
+                        paymentAmount={paymentAmount}
+                        tokenSymbol={paymentTokenSymbol}
+                        onDeadlineChange={setDeadline}
+                        readOnly={isTaskInProgress}
+                      />
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-500">
+                  <div className="bg-white/[0.05] rounded-3xl p-6 border border-white/10">
+                    <label className="text-[10px] font-bold text-emerald-400 mb-3 block uppercase tracking-widest flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Agent Result
+                    </label>
+                    <div className="bg-black/40 rounded-2xl border border-white/5 p-4 min-h-[120px] max-h-[200px] overflow-y-auto custom-scrollbar">
+                      {agentResult !== null ? (
+                        <pre className="text-[11px] text-slate-200 whitespace-pre-wrap font-mono leading-relaxed">
+                          {typeof agentResult === 'string'
+                            ? agentResult
+                            : JSON.stringify(agentResult, null, 2)}
+                        </pre>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-8 opacity-40">
+                          <RefreshCw className="w-6 h-6 animate-spin mb-2" />
+                          <span className="text-[10px] font-bold">Fetching result data...</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {activeTask && (
+                    <div className="bg-white/[0.05] rounded-3xl p-6 border border-white/10">
+                      <label className="text-[10px] font-bold text-primary mb-3 block uppercase tracking-widest">Contestation Window</label>
+                      <TaskContestationActions
+                        task={activeTask}
+                        connectedAddress={address}
+                        agentResponseWindowSec={agentResponseWindowSec}
+                        disputeBondBps={disputeBondBps}
+                        escrowTimingLoading={escrowTimingLoading}
+                        onTaskUpdated={refreshActiveTask}
+                      />
+                      {activeTaskDisputeMessage && (
+                        <p className="mt-4 p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-[10px] text-orange-200/90 leading-relaxed italic text-center">
+                          {activeTaskDisputeMessage}
+                        </p>
+                      )}
                     </div>
                   )}
-                  <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 mb-1 flex-none">
-                      <Image
-                        src={networkLogo}
-                        alt="Network Logo"
-                        width={24}
-                        height={24}
-                        className="w-5 h-5 object-contain"
-                      />
-                      <span className="font-bold text-base text-white">{paymentTokenSymbol}</span>
-                  </div>
                 </div>
-                <div className="text-[11px] text-muted-foreground flex justify-between mt-2 font-medium h-4">
-                  {selectedAgentId ? (
-                    <>
-                      <span>~ ${(parseFloat(paymentAmount) * 2500 || 0).toLocaleString()} USD</span>
-                      <span>
-                        Balance: {balance ? parseFloat(formatUnits(balance as bigint, paymentTokenDecimals)).toFixed(4) : '0.00'} {paymentTokenSymbol}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="opacity-50 italic text-[9px]">Awaiting selection to calculate fees...</span>
-                  )}
-                </div>
-
-                {selectedAgentId && (
-                  <TaskConfigForm
-                    paymentAmount={paymentAmount}
-                    tokenSymbol={paymentTokenSymbol}
-                    onDeadlineChange={setDeadline}
-                    readOnly={isTaskInProgress}
-                  />
-                )}
-              </div>
+              )}
             </div>
-
-            {activeTask && showTaskActions && (
-              <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-xs">
-                <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Task Actions</p>
-                <TaskContestationActions
-                  task={activeTask}
-                  connectedAddress={address}
-                  agentResponseWindowSec={agentResponseWindowSec}
-                  disputeBondBps={disputeBondBps}
-                  escrowTimingLoading={escrowTimingLoading}
-                  onTaskUpdated={refreshActiveTask}
-                />
-              </div>
-            )}
 
             {hasRequestLowerContent && (
               <div className="mt-8 flex-none space-y-3">

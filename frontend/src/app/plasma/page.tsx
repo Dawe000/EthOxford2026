@@ -41,7 +41,7 @@ export default function PlasmaFlowPage() {
 
       {/* Main Content */}
       <div className="flex-1 w-full flex items-center justify-center relative z-20 p-4 overflow-hidden">
-        <div className="w-full max-w-4xl">
+        <div className="w-full max-w-4xl h-[85%] overflow-y-auto custom-scrollbar pr-2">
           <Card className="p-8 bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-2xl rounded-[2.5rem]">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-[#162f29] rounded-2xl text-[#4ade80]">
