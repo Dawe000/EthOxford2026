@@ -38,4 +38,4 @@ max_batch_size = 5
 max_batch_timeout = 5
 
 [triggers]
-crons = ["*/5 * * * *", "0 */6 * * *"]
+crons = ["*/1 * * * *", "0 */6 * * *"]

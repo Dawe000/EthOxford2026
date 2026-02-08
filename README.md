@@ -58,11 +58,48 @@ Requires `.env` with `VENICE_API_KEY`, `PINECONE_API_KEY`, `PINECONE_INDEX_HOST`
 
 See each module's README for detailed setup and usage.
 
+## Demo
+
+**Demo:** *Link TBD.*
+
+## Built on Flare
+
+- **Network:** Flare **Coston2 Testnet** (Chain ID 114). RPC: `https://coston2-api.flare.network/ext/C/rpc`. Faucet: [faucet.flare.network](https://faucet.flare.network).
+- **Integrations:** **FAssets** (FXRP as payment and vault underlying), **FXRP** (FTestXRP on Coston2), **yFXRP** (yield-bearing vault shares for agent collateral via custom ERC-4626 vault). We use a custom vault for uncapped deposits; the official Firelight vault is also supported.
+- **Setup:** See [Quick Start](#quick-start) and [Smart Contracts](#smart-contracts) below. For Flare-only: `cd contracts && npm install && npm run compile`, then `OP=flow npx hardhat run script/flare/vault-operations.ts --network coston2`. Use `contracts/.env` with `MNEMONIC` (and optional `PINATA_JWT` for dispute flows). See [contracts/script/flare/README.md](./contracts/script/flare/README.md) for full install and run instructions.
+
+## Built on Plasma
+
+- **Network:** **Plasma Testnet** (Chain ID 9746). RPC: `https://testnet-rpc.plasma.to`. Native gas token: XPL; get testnet USDT0 and XPL from faucet/bridge as needed.
+- **Integrations:** **USDT0** (stablecoin for client payments and agent stake), standard ERC-20; UMA-style dispute resolution via MockOOv3. Same escrow and flow patterns as Flare (path-a, path-b, path-c, path-d).
+- **Setup:** See [Quick Start](#quick-start) and [Smart Contracts](#smart-contracts). For Plasma: `cd contracts && npm install && npm run compile`, then e.g. `npm run testnet:flow:path-a`. Use `contracts/.env` with `MNEMONIC` (and optional `PINATA_JWT` for path-b-uma). See [contracts/script/plasma/README.md](./contracts/script/plasma/README.md) for deploy, mint, and flow commands.
+
+## Smart Contracts
+
+Contracts are deployed on **Flare Coston2** and **Plasma Testnet**. Explorer links below (Coston2: [coston2-explorer.flare.network](https://coston2-explorer.flare.network)).
+
+### Flare Coston2 Testnet
+
+| Contract | Address | Explorer |
+|----------|---------|----------|
+| AgentTaskEscrow | `0x5CA6175c0a5ec4ce61416E49fe69e3B91B4Ba310` | [View](https://coston2-explorer.flare.network/address/0x5CA6175c0a5ec4ce61416E49fe69e3B91B4Ba310) |
+| MockOOv3 (UMA) | `0xdA085435a4a74e15e6CbF6dc3c9F89E9D6aD1C27` | [View](https://coston2-explorer.flare.network/address/0xdA085435a4a74e15e6CbF6dc3c9F89E9D6aD1C27) |
+| yFXRP Vault (custom) | `0xe07484f61fc5C02464ceE533D7535D0b5a257f22` | [View](https://coston2-explorer.flare.network/address/0xe07484f61fc5C02464ceE533D7535D0b5a257f22) |
+| FXRP (FTestXRP) | `0x0b6A3645c240605887a5532109323A3E12273dc7` | [View](https://coston2-explorer.flare.network/address/0x0b6A3645c240605887a5532109323A3E12273dc7) |
+
+### Plasma Testnet
+
+| Contract | Address | Explorer |
+|----------|---------|----------|
+| AgentTaskEscrow | `0xFf4e2165f2B30e3f7e25118148C3f7b53895F513` | [View](https://testnet.plasmascan.to/address/0xFf4e2165f2B30e3f7e25118148C3f7b53895F513) |
+| MockOOv3 | `0x7Aa7562D8e62047fAfa185937C39436051565e73` | [View](https://testnet.plasmascan.to/address/0x7Aa7562D8e62047fAfa185937C39436051565e73) |
+| USDT0 | `0x502012b361AebCE43b26Ec812B74D9a51dB4D412` | [View](https://testnet.plasmascan.to/address/0x502012b361AebCE43b26Ec812B74D9a51dB4D412) |
+
 ## Blockchain Integrations
 
 ### Flare Network (Coston2 Testnet)
 
-**Why Flare**: Unlocks **XRPL's $30B+ liquidity** for agent marketplaces via FAssets, enabling cross-chain collateral without wrapped tokens or CEX custody. Agents stake **yFXRP** (yield-bearing FXRP vault shares) to earn **5-10% APY** on required collateral—turning idle capital into productive yield.
+**Why Flare**: Unlocks **XRPL's $30B+ liquidity** for agent marketplaces via FAssets, enabling cross-chain collateral without wrapped tokens or CEX custody. Agents stake **yFXRP** (yield-bearing FXRP vault shares) to earn yield on required collateral.
 
 **Key Benefits**:
 - **Cross-chain liquidity**: XRPL → Flare seamlessly via enshrined FAssets protocol
@@ -72,7 +109,7 @@ See each module's README for detailed setup and usage.
 **Resources**:
 - **[contracts/script/flare/README.md](./contracts/script/flare/README.md)** - Scripts to deploy vault, run E2E tests, check balances
 - **[contracts/script/flare/FLARE_INTEGRATION.md](./contracts/script/flare/FLARE_INTEGRATION.md)** - Full technical guide, developer feedback, bounty qualification
-- **Live deployment**: Escrow `0x3419513f9636760C29033Fed040E7E1278Fa7B2b`, Vault `0xe07484f61fc5C02464ceE533D7535D0b5a257f22` (Coston2)
+- **Live deployment**: See [Smart Contracts](#smart-contracts) above.
 
 **Quick Start**:
 ```bash
@@ -112,6 +149,15 @@ npm run testnet:flow:path-c  # UMA dispute escalation
 - [Firelight Protocol](https://firelight.finance/) – Liquid staking for FAssets
 - [Agent0 Semantic Search Service](https://github.com/agent0lab/search-service) – ERC8004 semantic search (indexing, Venice AI + Pinecone)
 - [Lyneth Labs Whitepaper](https://docs.lyneth.ai/technical-docs/lyneth_labs_whitepaper) – Trust and reputation API
+
+## Environment Variables
+
+Copy `.env.example` in the relevant folder and fill in values. Main ones:
+
+- **contracts/** – `contracts/.env.example`: `MNEMONIC` (required for deploy and testnet flows), optional `PINATA_JWT` for IPFS (dispute/escalation). See `contracts/.env.example`.
+- **dvm-agent/** – `dvm-agent/.dev.vars.example`: DVM wallet key, Venice API key, RPC and escrow addresses. See `dvm-agent/.dev.vars.example`.
+- **exampleagents/** – See `exampleagents/README.md` for `AGENT_EVM_PRIVATE_KEY`, chain config, optional Pinata.
+- **Root** – For agent vector sync: `VENICE_API_KEY`, `PINECONE_API_KEY`, `PINECONE_INDEX_HOST`. See root `.env.example`.
 
 ## Testing
 
