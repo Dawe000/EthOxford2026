@@ -162,7 +162,9 @@ export default function Home() {
         : 18;
 
   const paymentTokenSymbol = (paymentTokenSymbolData as string | undefined)
-    || (isPlasmaChain ? 'TST' : isCoston2Chain ? 'FXRP' : 'TOKEN');
+    || (isPlasmaChain ? 'TST' : isCoston2Chain ? 'C2FLR' : 'TOKEN');
+
+  const networkLogo = isCoston2Chain ? "/flare.png" : "/chain-light.svg";
 
   useEffect(() => {
     if (!selectedAgent?.agent.sla?.minAcceptanceStake) return;
@@ -462,7 +464,7 @@ export default function Home() {
                   )}
                   <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 mb-1 flex-none">
                       <Image
-                        src="/chain-light.svg"
+                        src={networkLogo}
                         alt="Network Logo"
                         width={24}
                         height={24}
