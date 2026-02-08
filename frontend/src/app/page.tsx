@@ -453,11 +453,10 @@ export default function Home() {
                 <TaskSearchBox onSearch={setQuery} />
               </div>
 
+              {/* Centered Arrow Button */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
-                <div className="bg-[#0a0a0f]/90 backdrop-blur-md p-2 rounded-xl border border-white/10 shadow-2xl">
-                  <div className="bg-white/5 p-1 rounded text-primary">
-                    <ArrowDown className="w-5 h-5" />
-                  </div>
+                <div className="bg-[#0a0a0f] p-2.5 rounded-2xl border-4 border-[#16161e] shadow-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <ArrowDown className="w-5 h-5 text-primary" />
                 </div>
               </div>
 

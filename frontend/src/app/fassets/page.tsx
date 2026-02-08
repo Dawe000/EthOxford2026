@@ -112,8 +112,8 @@ export default function FAssetsFlowPage() {
                 <div className="space-y-2 text-[9px] font-mono">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400">Escrow</span>
-                    <a href="https://coston2-explorer.flare.network/address/0xA4E4C1772d3d2f604734609608009C46C5E32537" target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:text-pink-300 transition-colors">
-                      0xA4E4...2537
+                    <a href="https://coston2-explorer.flare.network/address/0x5CA6175c0a5ec4ce61416E49fe69e3B91B4Ba310" target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:text-pink-300 transition-colors">
+                      0x5CA6...a310
                     </a>
                   </div>
                   <div className="flex justify-between items-center">
@@ -130,8 +130,8 @@ export default function FAssetsFlowPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400">Mock OOv3</span>
-                    <a href="https://coston2-explorer.flare.network/address/0x88E330931Eac139ef4C0a19797b682662a5B8C93" target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:text-pink-300 transition-colors">
-                      0x88E3...8C93
+                    <a href="https://coston2-explorer.flare.network/address/0xdA085435a4a74e15e6CbF6dc3c9F89E9D6aD1C27" target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:text-pink-300 transition-colors">
+                      0xdA08...1C27
                     </a>
                   </div>
                 </div>
