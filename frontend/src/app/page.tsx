@@ -5,6 +5,7 @@ import { TaskSearchBox } from '@/components/TaskSearchBox';
 import { AgentRoutesList } from '@/components/AgentRoutesList';
 import { TaskConfigForm } from '@/components/TaskConfigForm';
 import { TaskContestationActions } from '@/components/TaskContestationActions';
+import { FlareFlowDiagram } from '@/components/FlareFlowDiagram';
 import { useAgentMatching } from '@/hooks/useAgentMatching';
 import { useEscrowTiming } from '@/hooks/useEscrowTiming';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -85,11 +86,12 @@ export default function Home() {
   const [agentResult, setAgentResult] = useState<unknown>(null);
   const [pollError, setPollError] = useState<string | null>(null);
 
-  const { data: agents, isLoading, error } = useAgentMatching(query);
-  const sdk = useAgentSDK();
-  const { agentResponseWindowSec, disputeBondBps, isLoading: escrowTimingLoading } = useEscrowTiming();
-  const isPlasmaChain = chainId === PLASMA_TESTNET_DEFAULTS.chainId;
-  const isCoston2Chain = chainId === COSTON2_FIRELIGHT_DEFAULTS.chainId;
+    const { data: agents, isLoading, error } = useAgentMatching(query);
+    const sdk = useAgentSDK();
+    const { agentResponseWindowSec, disputeBondBps, isLoading: escrowTimingLoading } = useEscrowTiming();
+  
+    const isPlasmaChain = chainId === PLASMA_TESTNET_DEFAULTS.chainId;
+    const isCoston2Chain = chainId === COSTON2_FIRELIGHT_DEFAULTS.chainId;
   const isSupportedExecutionChain = SUPPORTED_DIRECT_EXECUTION_CHAINS.has(chainId);
   const paymentTokenAddress = isPlasmaChain
     ? PLASMA_TESTNET_DEFAULTS.mockTokenAddress
@@ -419,6 +421,11 @@ export default function Home() {
           <Link href="/activity">
             <button className="px-4 py-1.5 rounded-full hover:bg-white/5 text-muted-foreground font-medium text-xs transition-all">Activity</button>
           </Link>
+          {isCoston2Chain && (
+            <Link href="/fassets">
+              <button className="px-4 py-1.5 rounded-full hover:bg-[#fbcfe8]/10 text-muted-foreground hover:text-[#fbcfe8] font-bold text-xs transition-all">FAssets Flow</button>
+            </Link>
+          )}
         </div>
         <ConnectButton />
       </nav>
@@ -427,7 +434,9 @@ export default function Home() {
         <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 h-[600px]">
           <Card className="flex flex-col p-8 bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-2xl rounded-[2.5rem] relative overflow-hidden h-full">
             <div className="flex justify-between items-center mb-6 flex-none">
-              <h2 className="text-2xl font-bold tracking-tight text-white">Request Task</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-bold tracking-tight text-white">Request Task</h2>
+              </div>
               <button className="p-1.5 hover:bg-white/10 rounded-full transition-colors">
                 <Settings className="text-muted-foreground w-5 h-5" />
               </button>
