@@ -123,17 +123,52 @@ npm run testnet:flow:path-a
 ### Path B: UMA escalation (test DVM)
 - `npm run testnet:flow:path-b-uma-escalate` – client disputes, agent escalates to UMA, then **DVM worker** (cron) resolves via `pushResolution`. Requires:
   - **PINATA_JWT** in `contracts/.env` or `sdk/.env` (IPFS uploads for dispute/evidence).
-  - **Agent** must have USDT0 for **escalation bond**: `max(1% of payment, umaConfig.minimumBond)`. Current testnet escrow uses `minimumBond = 1e18` (for 18‑decimal tokens). With **USDT0 (6 decimals)** that is 1e18 raw = 1e12 USDT, so escalation will fail unless you redeploy escrow with a lower `UMA_MINIMUM_BOND` (e.g. `1e6` = 1 USDT in 6 decimals).
-- After the script escalates, ensure the **DVM worker** is deployed and its cron runs (or trigger manually); it will call `pushResolution` on MockOOv3. The script polls until task status is Resolved (or 10 min timeout).
+  - **Agent** gets escalation bond topped up by the script from Client if needed (testnet escrow uses small `UMA_MINIMUM_BOND`).
+  - **DVM worker** deployed and cron running (or trigger manually); script polls until task status is Resolved (or 10 min timeout).
 
 ### Path C: UMA Escalation
-- Client creates task
-- Agent accepts with stake
-- Agent asserts completion
-- Client disputes
-- Agent escalates to UMA
-- UMA oracle resolves dispute
-- Settlement based on oracle result
+- Same as path-b-uma-* but different resolution path (see script).
+
+---
+
+## E2E tests and wallet funding
+
+**From `contracts/` (Plasma testnet):**
+
+| Script | What it does |
+|--------|----------------|
+| `npm run testnet:flow:path-a` | Happy path: create → accept → deposit → assert → cooldown → settle (no dispute) |
+| `npm run testnet:flow:path-b-concede` | Client disputes, agent does nothing; after window client calls settleAgentConceded |
+| `npm run testnet:flow:path-b-uma-escalate` | Client disputes, agent escalates to UMA; DVM cron resolves; script polls until Resolved |
+| `npm run testnet:flow:path-b-uma-agent` | Same + script pushes resolution (agent wins) |
+| `npm run testnet:flow:path-b-uma-client` | Same + script pushes resolution (client wins) |
+| `npm run check:disputes` | List escalated disputes and liveness (Plasma escrow) |
+
+**Wallets (from `MNEMONIC` in `contracts/.env`):**
+
+```bash
+cd contracts
+MNEMONIC="your twelve word phrase" npm run print-addresses
+```
+
+| Role | Derivation | Fund with (Plasma testnet) |
+|------|------------|----------------------------|
+| Deployer | m/44'/60'/0'/0/0 | XPL (gas for deploy) |
+| **Client** | m/44'/60'/0'/0/1 | XPL (gas) + **USDT0** (payment + dispute bond) |
+| **Agent** | m/44'/60'/0'/0/2 | XPL (gas) + **USDT0** (stake; escalation bond topped up by script if needed) |
+| MarketMaker | m/44'/60'/0'/0/3 | XPL (gas; used by escrow config) |
+
+- **USDT0** (Plasma): `0x502012b361AebCE43b26Ec812B74D9a51dB4D412` — get from faucet/bridge.
+- **XPL**: native gas token on Plasma testnet.
+
+**DVM worker wallet (for path-b-uma-escalate resolution):**
+
+```bash
+cd dvm-agent
+npm run print-dvm-address   # uses DVM_PRIVATE_KEY from .dev.vars or env
+```
+
+Fund that address with **XPL** (Plasma) and **C2FLR** (Flare Coston2) so the worker can send `pushResolution` on both chains.
 
 ## Troubleshooting
 
