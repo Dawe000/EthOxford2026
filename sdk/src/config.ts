@@ -2,15 +2,18 @@
  * SDK configuration
  */
 
-/** Default Plasma testnet (chainId 9746) deployment addresses */
+/** Plasma testnet USDT0 (ERC-20). https://testnet.plasmascan.to/token/0x502012b361AebCE43b26Ec812B74D9a51dB4D412 */
+export const PLASMA_TESTNET_USDT = "0x502012b361AebCE43b26Ec812B74D9a51dB4D412" as const;
+
+/** Default Plasma testnet (chainId 9746) deployment – USDT0-only escrow */
 export const PLASMA_TESTNET_DEFAULTS = {
-  escrowAddress: "0x2E24A0a838Fa71765A00CB9528B6C378D8437D53" as const,
-  mockTokenAddress: "0xd201516E43fe79D176c2A48420685CAB9f87cF6C" as const,
-  mockOOv3Address: "0x4316125D2F7A6163607b44f948D977fd0dbCA8F3" as const,
+  escrowAddress: "0xFf4e2165f2B30e3f7e25118148C3f7b53895F513" as const,
+  mockTokenAddress: PLASMA_TESTNET_USDT,
+  mockOOv3Address: "0x7Aa7562D8e62047fAfa185937C39436051565e73" as const,
   chainId: 9746,
   rpcUrl: "https://testnet-rpc.plasma.to",
   /** Escrow deployment block - used to limit eth_getLogs range on RPCs with 10k block limit (Plasma) */
-  deploymentBlock: 14650825,
+  deploymentBlock: 14701053,
 } as const;
 
 /** Default Coston2 testnet (chainId 114) deployment addresses for Firelight integration */
