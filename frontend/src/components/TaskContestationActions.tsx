@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { formatEther } from 'ethers';
 import { TaskStatus, type Task } from '@sdk/types';
 import { toast } from 'sonner';
-import { Input } from '@/components/ui/input';
 import { useAgentSDK } from '@/hooks/useAgentSDK';
 import { getContestationTiming, getDisputeEligibility, getSettleEligibility } from '@/lib/contestation';
 import { getDisputePhase, getDisputeStatusMessage } from '@/lib/disputeFlow';
+import { isLikelyUri } from '@sdk/index';
 import { classifyRpcError } from '@/lib/rpcErrors';
 
 interface TaskContestationActionsProps {
@@ -80,7 +80,7 @@ export function TaskContestationActions({
 }: TaskContestationActionsProps) {
   const sdk = useAgentSDK();
   const [nowSec, setNowSec] = useState<number>(Math.floor(Date.now() / 1000));
-  const [evidenceUri, setEvidenceUri] = useState<string>(task.clientEvidenceURI || '');
+  const [evidence, setEvidence] = useState<string>(task.clientEvidenceURI || '');
   const [isDisputing, setIsDisputing] = useState(false);
   const [isSettling, setIsSettling] = useState(false);
 
@@ -92,11 +92,11 @@ export function TaskContestationActions({
   }, []);
 
   useEffect(() => {
-    setEvidenceUri(task.clientEvidenceURI || '');
+    setEvidence(task.clientEvidenceURI || '');
   }, [task.id, task.clientEvidenceURI]);
 
   const responseWindow = agentResponseWindowSec ?? 0n;
-  const trimmedEvidenceUri = evidenceUri.trim();
+  const trimmedEvidence = evidence.trim();
   const status = Number(task.status);
   const disputePhase = useMemo(() => {
     return getDisputePhase(task, nowSec, responseWindow);
@@ -110,8 +110,8 @@ export function TaskContestationActions({
   }, [task, nowSec, responseWindow]);
 
   const disputeEligibility = useMemo(() => {
-    return getDisputeEligibility(task, nowSec, connectedAddress, trimmedEvidenceUri);
-  }, [task, nowSec, connectedAddress, trimmedEvidenceUri]);
+    return getDisputeEligibility(task, nowSec, connectedAddress, trimmedEvidence, trimmedEvidence);
+  }, [task, nowSec, connectedAddress, trimmedEvidence]);
 
   const settleEligibility = useMemo(() => {
     return getSettleEligibility(task, nowSec, agentResponseWindowSec, connectedAddress, escrowTimingLoading);
@@ -143,10 +143,29 @@ export function TaskContestationActions({
     }
 
     setIsDisputing(true);
-    const toastId = toast.loading(`Submitting dispute for task ${task.id.toString()}...`);
+    let toastId = toast.loading(`Preparing dispute for task ${task.id.toString()}...`);
 
     try {
-      await sdk.client.disputeTask(task.id, trimmedEvidenceUri);
+      let evidenceUri: string;
+      if (trimmedEvidence && isLikelyUri(trimmedEvidence)) {
+        evidenceUri = trimmedEvidence;
+      } else {
+        toast.loading(`Uploading evidence to IPFS...`, { id: toastId });
+        const res = await fetch('/api/ipfs/evidence', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: trimmedEvidence || 'Client disputes task result.' }),
+        });
+        const data = (await res.json()) as { uri?: string; error?: string; details?: string };
+        if (!res.ok) {
+          throw new Error(data.details || data.error || 'Failed to upload evidence');
+        }
+        if (!data.uri) throw new Error('No URI returned from IPFS upload');
+        evidenceUri = data.uri;
+      }
+
+      toast.loading(`Submitting dispute for task ${task.id.toString()}...`, { id: toastId });
+      await sdk.client.disputeTask(task.id, evidenceUri);
       toast.success('Task disputed. Waiting for agent response window.', { id: toastId });
       await onTaskUpdated?.();
     } catch (error: unknown) {
@@ -214,18 +233,19 @@ export function TaskContestationActions({
 
       {status === TaskStatus.ResultAsserted && (
         <div className="space-y-2">
-          <Input
-            value={evidenceUri}
-            onChange={(event) => setEvidenceUri(event.target.value)}
-            placeholder="ipfs://... or https://..."
-            className="h-8 border-orange-500/40 bg-black/20 text-xs"
+          <textarea
+            value={evidence}
+            onChange={(e) => setEvidence(e.target.value)}
+            placeholder="Describe why you're disputing (uploaded to IPFS), or paste an ipfs:// / https:// URI"
+            rows={3}
+            className="w-full resize-y rounded border border-orange-500/40 bg-black/20 px-2 py-1.5 text-xs text-white placeholder:text-orange-300/60"
           />
           <button
             onClick={handleDispute}
             disabled={!disputeEligibility.enabled || isDisputing}
             className="w-full rounded-lg bg-orange-400 px-3 py-2 text-xs font-bold text-black transition hover:bg-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isDisputing ? 'Submitting Dispute...' : 'Dispute Result'}
+            {isDisputing ? 'Uploading & disputing...' : 'Upload evidence & dispute'}
           </button>
           {disputeEligibility.reason && (
             <p className="text-[10px] text-orange-200/80">{disputeEligibility.reason}</p>
