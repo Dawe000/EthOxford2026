@@ -80,7 +80,7 @@ export default function FAssetsFlowPage() {
         <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8 h-[85%]">
           
           {/* Left Column: Legend & Info */}
-          <div className="lg:col-span-1 space-y-6 overflow-y-auto pr-2 custom-scrollbar">
+          <div className="lg:col-span-1 space-y-6 overflow-y-auto custom-scrollbar pr-2">
             <Card className="p-8 bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-2xl rounded-[2.5rem]">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 bg-pink-500/20 rounded-2xl text-pink-400">
